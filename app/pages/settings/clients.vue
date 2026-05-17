@@ -40,7 +40,7 @@
                 </div>
             </template>
         </UDashboardPanel>
-        <ClientsDetails v-model:open="openDetailsClient" :client="selectedClient" />
+        <ClientsUpdateModal v-model:open="openDetailsClient" :client="selectedClient" />
 
     </div>
 </template>
@@ -99,7 +99,7 @@ const columns: TableColumn<Client>[] = [
         cell: ({ row }) => h(UButton, {
             color: 'primary',
             variant: 'ghost',
-            icon: 'i-lucide-eye',
+            icon: 'material-symbols:edit-outline-sharp',
             onClick: () => {
                 selectedClient.value = row.original
                 openDetailsClient.value = !openDetailsClient.value
