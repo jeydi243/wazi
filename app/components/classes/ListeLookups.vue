@@ -127,24 +127,24 @@ const columnsLookups: TableColumn<Lookup>[] = [
         header: 'Nom',
         cell: ({ row }) => h('p', {class:"whitespace-nowrap"}, row.original.nom)
     },
-    {
-        accessorKey: 'description',
-        header: ({ column }) => {
-            const isSorted = column.getIsSorted()
-            return h(UButton, {
-                color: 'neutral',
-                variant: 'ghost',
-                label: 'Description',
-                icon: isSorted
-                    ? isSorted === 'asc'
-                        ? 'i-lucide-arrow-up-narrow-wide'
-                        : 'i-lucide-arrow-down-wide-narrow'
-                    : 'i-lucide-arrow-up-down',
-                class: '-mx-2.5',
-                onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
-            })
-        }
-    },
+    // {
+    //     accessorKey: 'description',
+    //     header: ({ column }) => {
+    //         const isSorted = column.getIsSorted()
+    //         return h(UButton, {
+    //             color: 'neutral',
+    //             variant: 'ghost',
+    //             label: 'Description',
+    //             icon: isSorted
+    //                 ? isSorted === 'asc'
+    //                     ? 'i-lucide-arrow-up-narrow-wide'
+    //                     : 'i-lucide-arrow-down-wide-narrow'
+    //                 : 'i-lucide-arrow-up-down',
+    //             class: '-mx-2.5',
+    //             onClick: () => column.toggleSorting(column.getIsSorted() === 'asc')
+    //         })
+    //     }
+    // },
     {
         header: () => h('div', { class: 'text-center' }, 'Actions'),
         id: 'actions',

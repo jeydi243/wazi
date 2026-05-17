@@ -4,15 +4,23 @@ import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import type { Client, Lookup } from '~/types'
 
 const ClientSchema = z.object({
-    code: z.string().min(6, 'Code must be at least 6 characters'),
-    nom: z.string().min(6, 'Name must be at least 6 characters'),
-    description: z.string().min(5, 'Description must be at least 5 characters'),
+    code: z.string().min(1, 'Code must be at least 1 character'),
+    nom: z.string().min(1, 'Name must be at least 1 character'),
+    description: z.string().min(1, 'Description must be at least 1 character'),
     type_id: z.string().optional()
 })
+const parametresStore = useParametresStore()
 const supabase = useSupabaseClient()
 const open = ref(false)
 const toast = useToast()
 type Schema = z.output<typeof ClientSchema>
+
+const getTypeClient = computed(() => parametresStore.getTypeClient)
+
+const itemsTypeClient = computed<SelectMenuItem[]>(() => getTypeClient.value?.map((item: any) => ({
+    label: item.nom,
+    id: item.id
+})) || [])
 
 const state = reactive<Partial<Schema>>({
     code: generateRandomCode(),

@@ -73,14 +73,6 @@ const links = [
             onSelect: () => {
                 open.value = false
             }
-        },
-        {
-            label: 'Commandes',
-            to: '/stock/commandes',
-            icon: 'solar:clipboard-list-linear',
-            onSelect: () => {
-                open.value = false
-            }
         }]
     },
     {

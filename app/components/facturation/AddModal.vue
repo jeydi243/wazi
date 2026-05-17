@@ -40,11 +40,14 @@ const toCalendarDate = (date: Date) => {
         date.getDate()
     )
 }
-const { data: fournisseurs } = await useLazyAsyncData('fournisseurs', async () => {
-    const { data } = await supabase.from('fournisseurs').select('id, nom')
-    return data
-})
+
 const getTypeFactures = computed(() => parametresStore.getTypeFactures)  
+const getDevises = computed(() => parametresStore.getDevise)  
+const getTypeAvoirs = computed(() => parametresStore.getTypeAvoirs)
+const getModePaiements = computed(() => parametresStore.getModePaiement)
+const getConditionPaiements = computed(() => parametresStore.getConditionPaiement)
+const getClients = computed(() => parametresStore.clients)
+
 
 const dateTrxModel = computed({
     get: () => state.date_facture ? toCalendarDate(state.date_facture) : undefined,
@@ -53,18 +56,31 @@ const dateTrxModel = computed({
     }
 })
 const maxDate = new CalendarDate(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate())
-const items = computed<SelectMenuItem[]>(() => fournisseurs.value?.map((fss: any) => ({
-    label: fss.nom,
-    id: fss.id
-})) || [])
 
 const itemsTypeFacture = computed<SelectMenuItem[]>(() => getTypeFactures.value?.map((item: any) => ({
-    label: item.organisation.nom,
-    id: item.organisation.id
+    label: item.nom,
+    id: item.id
 })) || [])
-const itemsTypeAvoir = computed<SelectMenuItem[]>(() => getTypeFactures.value?.map((item: any) => ({
-    label: item.organisation.nom,
-    id: item.organisation.id
+
+const itemsTypeAvoir = computed<SelectMenuItem[]>(() => getTypeAvoirs.value?.map((item: any) => ({
+    label: item.nom,
+    id: item.id
+})) || [])
+const itemsDevises = computed<SelectMenuItem[]>(() => getDevises.value?.map((item: any) => ({
+    label: item.nom,
+    id: item.id
+})) || [])
+const itemsModePaiements = computed<SelectMenuItem[]>(() => getModePaiements.value?.map((item: any) => ({
+    label: item.nom,
+    id: item.id
+})) || [])
+const itemsConditionPaiements = computed<SelectMenuItem[]>(() => getConditionPaiements.value?.map((item: any) => ({
+    label: item.nom,
+    id: item.id
+})) || [])
+const itemsClients = computed<SelectMenuItem[]>(() => getClients.value?.map((item: any) => ({
+    label: item.nom,
+    id: item.id
 })) || [])
 
 const emit = defineEmits(['facture-added'])
@@ -93,24 +109,24 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <template #body>
             <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
                 <UFormField label="Client" placeholder="_" name="client_id">
-                    <USelectMenu v-model="state.client_id" value-key="id" :items="items" class="w-full" />
+                    <USelectMenu v-model="state.client_id" value-key="id" :items="itemsClients" class="w-full" />
                 </UFormField>
                 <UFormField label="Type facture" placeholder="" name="type_facture">
                     <USelectMenu v-model="state.type_facture" value-key="id" :items="itemsTypeFacture"
                         empty="Aucun magasin disponible" class="w-full" />
                 </UFormField>
-                <UFormField label="Type d'avoir" placeholder="" name="type_avoir">
+                <UFormField v-if="state.type_facture === 'AVOIR'" label="Type d'avoir" placeholder="" name="type_avoir">
                     <USelectMenu v-model="state.type_avoir" value-key="id" :items="itemsTypeAvoir"
                         empty="Aucun magasin disponible" class="w-full" />
                 </UFormField>
                 <UFormField label="Mode de paiement" placeholder="" name="mode_paiement">
-                    <USelectMenu v-model="state.mode_paiement" value-key="id" :items="items" class="w-full" />
+                    <USelectMenu v-model="state.mode_paiement" value-key="id" :items="itemsModePaiements" class="w-full" />
                 </UFormField>
                 <UFormField label="Condition de paiement" placeholder="" name="condition_paiement">
-                    <USelectMenu v-model="state.condition_paiement" value-key="id" :items="items" class="w-full" />
+                    <USelectMenu v-model="state.condition_paiement" value-key="id" :items="itemsConditionPaiements" class="w-full" />
                 </UFormField>
                 <UFormField label="Devise" placeholder="" name="devise">
-                    <USelectMenu v-model="state.devise" value-key="id" :items="items" class="w-full" />
+                    <USelectMenu v-model="state.devise" value-key="id" :items="itemsDevises" class="w-full" />
                 </UFormField>
 
                 <div class="flex justify-end gap-2">

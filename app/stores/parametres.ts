@@ -23,7 +23,7 @@ export const useParametresStore = defineStore('parametres', () => {
   const getModePaiement = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'mode_paiements'))
   const getConditionPaiement = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'conditions_paiements'))
   const getDevise = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'devises'))
-  const getClients = computed(() => clients.value)
+  const getTypeClient = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_client'))
 
   const getClasseItems = computed(() => {
     return classes.value.map(classe => ({
@@ -128,8 +128,9 @@ export const useParametresStore = defineStore('parametres', () => {
     getConditionPaiement,
     getDevise,
     getTypeAvoirs,
-    getClients,
+    getTypeClient,
     getEmplacements,
-    getTypeFactures
+    getTypeFactures,
+    clients
   }
 })
