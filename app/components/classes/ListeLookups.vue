@@ -1,6 +1,6 @@
 <template>
     <USlideover v-model:open="isOpen" description="Liste des lookups de la classe" title="Lookups"
-                :ui="{ content: 'max-w-3xl' }">
+                :ui="{ content: 'max-w-4xl' }">
         <template #body>
             <div class="flex items-center justify-between gap-2 p-2">
                 <UInput v-model="searchInputLookups" class="max-w-xs" icon="i-lucide-search"
@@ -12,7 +12,7 @@
                 </div>
             </div>
 
-            <div class="max-w-3xl">
+            <div class="max-w-4xl">
                 <UTable ref="table" v-model:column-filters="columnFiltersLookups"
                         v-model:column-visibility="columnVisibilityLookups" v-model:row-selection="rowSelectionLookups"
                         v-model:pagination="paginationLookups" :pagination-options="paginationOptionsLookups" class="shrink-0 m-2"
@@ -125,13 +125,7 @@ const columnsLookups: TableColumn<Lookup>[] = [
     {
         accessorKey: 'nom',
         header: 'Nom',
-        cell: ({ row }) => {
-            return h('div', { class: 'flex items-center gap-3' }, [
-                h('div', undefined, [
-                    h('p', {}, row.original.nom),
-                ])
-            ])
-        }
+        cell: ({ row }) => h('p', {class:"whitespace-nowrap"}, row.original.nom)
     },
     {
         accessorKey: 'description',

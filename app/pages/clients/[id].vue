@@ -1,11 +1,11 @@
 <template>
-    <UDashboardPanel id="partenaire-detail" as="div" :ui="{ body: 'p-4' }">
+    <UDashboardPanel id="client-detail" as="div" :ui="{ body: 'p-4' }">
         <template #header>
             <UDashboardNavbar>
                 <template #leading>
                     <UDashboardSidebarCollapse />
                     <UBreadcrumb
-                        :items="[{ label: 'Home', to: '/' }, { label: 'Partenaires', to: '/partenaires' }, { label: `${route.params.id}`, to: '/partenaires/' + $route.params.id }]" />
+                        :items="[{ label: 'Home', to: '/' }, { label: 'Clients', to: '/clients' }, { label: `${route.params.id}`, to: '/settings/clients' + route.params.id }]" />
                 </template>
 
                 <template #right>
@@ -15,11 +15,11 @@
             </UDashboardNavbar>
         </template>
         <template #body>
-            <pre>{{ partenaire }}</pre>
+            <pre>{{ client }}</pre>
             <div class="grid grid-cols-4 gap-4">
                 <div class="bg-red-500 h-20 flex flex-col justify-left items-left rounded-lg w-56 p-4">
                     <p>Nom</p>
-                    <p>{{ partenaire?.nom }}</p>
+                    <p>{{ client?.nom }}</p>
                 </div>
                 <div class="bg-teal-500 h-20 flex flex-col justify-left items-left rounded-lg w-56 p-4">
                     <h4>Nbre Patients</h4>
@@ -43,9 +43,9 @@
             </div>
             <UTabs color="primary" variant="link" :items="items" class="w-full" :ui="{ list: 'mb-2' }">
                 <template #content="{ item }">
-                    <PartenairesPatients v-if="item.value == 'partenaire' && partenaire" :organisation-id="route.params.id as string" />
-                    <PartenairesMutuelles v-else-if="item.value == 'mutuelle' && partenaire" :organisation-id="route.params.id as string" />
-                    <PartenairesFactures v-else :organisation="route.params.id" />
+                    <ClientsPatients v-if="item.value == 'client' && client" :organisation-id="route.params.id as string" />
+                    <ClientsMutuelles v-else-if="item.value == 'mutuelle' && client" :organisation-id="route.params.id as string" />
+                    <ClientsFactures v-else :organisation="route.params.id" />
                 </template>
             </UTabs>
         </template>
@@ -56,18 +56,18 @@
 import type { TabsItem } from '@nuxt/ui'
 
 definePageMeta({
-    name: 'partenaire-id',
+    name: 'client-id',
 
 })
 useHead({
-    title: 'Partenaire',
+    title: 'Client',
 })
 
 const items = ref<TabsItem[]>([
     {
         label: 'Patients',
         icon: 'i-lucide-user',
-        value: 'partenaire'
+        value: 'client'
     },
     {
         label: 'Factures',
@@ -81,10 +81,10 @@ const items = ref<TabsItem[]>([
     }
 ])
 const route = useRoute()
-const { data: partenaire, error } = await useAsyncData('partenaire-' + route.params.id, async () => {
+const { data: client, error } = await useAsyncData('client-' + route.params.id, async () => {
     const client = useSupabaseClient()
     const { data, error } = await client
-        .from('organisations')
+        .from('clients')
         .select('*')
         .eq('id', route.params.id as any)
         .single()

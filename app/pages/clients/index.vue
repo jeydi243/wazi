@@ -31,7 +31,7 @@ const columnFilters = ref([{
 }])
 
 // use useasyncData to fetch partenaires data from supabase
-const { data: partenaires, error, refresh: refreshPartenaires } = await useAsyncData('organisations', async () => {
+const { data: partenaires, error, refresh: refreshClients } = await useAsyncData('organisations', async () => {
     const { data, error } = await supabase.from('organisations').select('id, nom, description, lookups!inner(*)').eq('lookups.nom', 'Entreprise')
     if (error) {
         throw error;
@@ -201,16 +201,16 @@ const pagination = ref({
 </script>
 
 <template>
-    <UDashboardPanel id="partenaires" as="div" :ui="{ body: 'p-5', root: 'p-5' }">
+    <UDashboardPanel id="clients" as="div" :ui="{ body: 'p-5', root: 'p-5' }">
         <template #header>
             <UDashboardNavbar>
                 <template #leading>
                     <UDashboardSidebarCollapse />
-                    <UBreadcrumb :items="[{ label: 'Home', to: '/' }, { label: 'Partenaires', to: '/partenaires' }]" />
+                    <UBreadcrumb :items="[{ label: 'Home', to: '/' }, { label: 'Clients', to: '/settings/clients' }]" />
                 </template>
 
                 <template #right>
-                    <PartenairesAddModal @partenaire-added="refreshPartenaires()" />
+                    <ClientsAddModal @client-added="refreshClients()" />
                 </template>
             </UDashboardNavbar>
         </template>

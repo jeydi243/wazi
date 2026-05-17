@@ -256,6 +256,23 @@ export interface STKHeader {
 
 }
 
+
+export interface Facture {
+    id: string
+    client: Client
+    date_facture: string
+    mode_paiement: Lookup
+    numero_facture: string
+    numero_livraison?: string
+    numero_document: string
+    statut: string
+    type_facture: string
+    montant_ttc: number
+    montant_tva: number
+    montant_ht: number
+    remise: number
+
+}
 export interface STKLine {
     id: string
     header: STKHeader

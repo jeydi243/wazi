@@ -65,7 +65,7 @@ const { data: stats } = await useAsyncData<Stat[]>('stats', async () => {
 
 <template>
     <UPageGrid class="lg:grid-cols-4 gap-4 sm:gap-6 lg:gap-px">
-        <UPageCard v-for="(stat, index) in stats" :key="index" :icon="stat.icon" :title="stat.title" to="/partenaires"
+        <UPageCard v-for="(stat, index) in stats" :key="index" :icon="stat.icon" :title="stat.title" to="/facturation"
                    variant="subtle" :ui="{
                        container: 'gap-y-1.5',
                        leading: 'p-2.5 rounded-full bg-(--ui-primary)/10 ring ring-inset ring-(--ui-primary)/25',

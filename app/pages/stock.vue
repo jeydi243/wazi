@@ -25,11 +25,6 @@ const links = [[{
     label: 'Reception Interne',
     icon: 'octicon:organization-16',
     to: '/stock/reception-interne'
-},
-{
-    label: 'Commandes',
-    icon: 'solar:clipboard-list-linear',
-    to: '/stock/commandes'
 }
 
 ]]

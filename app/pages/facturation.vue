@@ -27,23 +27,25 @@
                             </UDropdownMenu>
                         </div>
                     </div>
-                    <FacturationAddModal @facturation-added="refreshSTKHeaders" />
+                    <FacturationAddModal @facturation-added="refreshFactures" />
                 </template>
             </UDashboardNavbar>
         </template>
         <template #body>
-            <UTable ref="table" v-model:column-filters="columnFilters" v-model:column-visibility="columnVisibility"
-                v-model:row-selection="rowSelection" v-model:pagination="pagination" empty="Aucune reception disponible"
-                :pagination-options="paginationOptions" class="shrink-0 m-2" :data="stk_trx_headers || []"
-                :columns="columns" :loading="pending" :ui="{
-                    base: 'table-fixed border-separate border-spacing-0 border border-(--ui-border) rounded-t-lg w-full',
-                    thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
-                    tbody: '[&>tr]:last:[&>td]:border-b-0',
-                    th: 'py-1 first:rounded-tl-[calc(var(--ui-radius)*2)] last:rounded-tr-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r pl-2',
-                    td: 'border-b border-(--ui-border) p-2'
-                }" />
-            <StockDetailsReception v-model:open="openSlideOver" :stk_trx_header="selectedSTKHeader"
-                @reception-finished="refreshSTKHeaders" />
+            <ClientOnly>
+                <UTable ref="table" v-model:column-filters="columnFilters" v-model:column-visibility="columnVisibility"
+                    v-model:row-selection="rowSelection" v-model:pagination="pagination"
+                    empty="Aucune facture disponible" :pagination-options="paginationOptions" class="shrink-0 m-2"
+                    :data="factures || []" :columns="columns" :loading="pending" :ui="{
+                        base: 'table-fixed border-separate border-spacing-0 border border-(--ui-border) rounded-t-lg w-full',
+                        thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
+                        tbody: '[&>tr]:last:[&>td]:border-b-0',
+                        th: 'py-1 first:rounded-tl-[calc(var(--ui-radius)*2)] last:rounded-tr-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r pl-2',
+                        td: 'border-b border-(--ui-border) p-2'
+                    }" />
+            </ClientOnly>
+            <!-- <StockDetailsReception v-model:open="openSlideOver" :stk_trx_header="selectedFacture"
+                @reception-finished="refreshFactures" /> -->
 
             <UModal v-model:open="openConfirmDelete" title="Confirmation de suppression"
                 description="Êtes-vous sûr de vouloir supprimer cette réception ? Cette action est irréversible.">
@@ -72,7 +74,7 @@
 <script setup lang="ts">
 import type { Row } from '@tanstack/table-core'
 import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
-import type { STKHeader } from '~/types'
+import type { Facture } from '~/types'
 
 // 1. SEO
 useHead({
@@ -96,8 +98,8 @@ const UCheckbox = resolveComponent('UCheckbox')
 // 4. Refs d'état UI
 const openSlideOver = ref(false)
 const openConfirmDelete = ref(false)
-const selectedSTKHeader = ref<STKHeader | null>(null)
-const receptionToDelete = ref<STKHeader | null>(null)
+const selectedFacture = ref<Facture | null>(null)
+const factureToDelete = ref<Facture | null>(null)
 const searchInput = ref('')
 
 // 5. useDataTable
@@ -131,56 +133,52 @@ watch(searchInput, (val) => {
 })
 
 // 6. Définition des colonnes
-const columns: TableColumn<STKHeader>[] = [
+const columns: TableColumn<Facture>[] = [
     {
         id: 'details',
         header: 'Détails',
-        cell: ({ row }) => h('p', { class: 'whitespace-nowrap' }, h(UButton, {
+        cell: ({ row }) => h(UButton, {
             color: 'neutral',
             variant: 'ghost',
             icon: 'solar:pen-line-duotone',
             onClick: () => {
-                selectedSTKHeader.value = row.original
+                selectedFacture.value = row.original
                 openSlideOver.value = true
             }
-        })),
+        })
     },
     {
-        accessorKey: 'in_organisation',
-        header: 'Magasin de reception',
-        cell: ({ row }) => {
-            const org = row.original.in_organisation
-            const orgNom = Array.isArray(org) ? (org as any)[0]?.nom : (org as any)?.nom
-            return h('p', undefined, orgNom ?? 'N/A')
-        }
+        accessorKey: 'client_id',
+        header: 'Client',
+        cell: ({ row }) => h('p', undefined, row.original.client.nom)
     }, {
-        accessorKey: 'fournisseur_id',
-        header: 'Fournisseur',
-        cell: ({ row }) => h('p', { class: 'font-medium' }, row.original.fournisseur?.nom)
+        accessorKey: 'numero_facture',
+        header: 'N° Facture',
+        cell: ({ row }) => h('p', { class: 'font-medium' }, row.original.numero_facture)
     },
     {
-        accessorKey: 'numero_document',
-        header: 'N° Document',
-        cell: ({ row }) => h('p', { class: 'font-medium' }, row.original.numero_document)
+        accessorKey: 'montant',
+        header: 'Montant HT',
+        cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.montant_ht)
+    },
+    {
+        accessorKey: 'montant_ttc',
+        header: 'Montant TTC',
+        cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.montant_ttc)
+    },
+    {
+        accessorKey: 'montant_tva',
+        header: 'Montant TVA',
+        cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.montant_tva)
     },
 
-    {
-        accessorKey: 'numero_commande',
-        header: 'N° Commande',
-        cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.numero_commande)
-    },
-    {
-        accessorKey: 'numero_livraison',
-        header: 'N° Livraison',
-        cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.numero_livraison)
-    },
 
     {
-        accessorKey: 'date_trx',
+        accessorKey: 'date_facture',
         header: 'Date',
         cell: ({ row }) => {
-            const date = row.original.date_trx ? new Date(row.original.date_trx) : null
-            return h('p', undefined, date ? date.toLocaleDateString() : 'N/A')
+            const date = row.original.date_facture ? new Date(row.original.date_facture) : null
+            return h('p', undefined, date ? date.toLocaleDateString('fr-FR') : 'N/A')
         }
     },
     {
@@ -224,14 +222,14 @@ const columns: TableColumn<STKHeader>[] = [
 ]
 
 // 7. Fonctions utilitaires
-function getRowItems(row: Row<STKHeader>): DropdownMenuItem[][] {
+function getRowItems(row: Row<Facture>): DropdownMenuItem[][] {
     return [[
         {
             type: 'label' as const,
             label: 'Actions'
         },
         {
-            label: 'Copie ID STKHeader',
+            label: 'Copie ID',
             icon: 'i-lucide-copy',
             onSelect() {
                 copy(row.original.id.toString())
@@ -246,7 +244,7 @@ function getRowItems(row: Row<STKHeader>): DropdownMenuItem[][] {
             label: 'Détails',
             icon: 'i-lucide-maximize-2',
             onSelect() {
-                selectedSTKHeader.value = row.original
+                selectedFacture.value = row.original
                 openSlideOver.value = true
             }
         },
@@ -257,7 +255,7 @@ function getRowItems(row: Row<STKHeader>): DropdownMenuItem[][] {
             color: 'error' as const,
             disabled: row.original.statut === 'Terminé',
             onSelect() {
-                receptionToDelete.value = row.original
+                factureToDelete.value = row.original
                 openConfirmDelete.value = true
             }
         }
@@ -265,12 +263,12 @@ function getRowItems(row: Row<STKHeader>): DropdownMenuItem[][] {
 }
 
 async function confirmDelete() {
-    if (!receptionToDelete.value) return
+    if (!factureToDelete.value) return
 
     const { error } = await supabase
-        .from('stk_trx_headers')
+        .from('factures')
         .delete()
-        .eq('id', receptionToDelete.value.id)
+        .eq('id', factureToDelete.value.id)
 
     if (error) {
         toast.add({
@@ -284,30 +282,30 @@ async function confirmDelete() {
             description: 'Réception supprimée avec succès',
             color: 'success'
         })
-        await refreshSTKHeaders()
+        await refreshFactures()
     }
     openConfirmDelete.value = false
-    receptionToDelete.value = null
+    // receptionToDelete.value = null
 }
 
 // 8. Chargement des données
-const { data: stk_trx_headers, pending, refresh: refreshSTKHeaders } = await useLazyAsyncData('stk_trx_headers_list',
+const { data: factures, pending, refresh: refreshFactures } = await useLazyAsyncData('factures_list',
     async () => {
         const { data, error } = await supabase
-            .from('stk_trx_headers')
-            .select('*, in_organisation:in_organisation_id(*), out_organisation:out_organisation_id(*), fournisseur:fournisseurs(*)')
+            .from('factures')
+            .select('*, client:client_id(*)')
         console.log('Données retournés ', { data })
         if (error) {
             throw error
         }
-        return data as STKHeader[]
+        return data as Facture[]
     })
 
 // Écouter les changements en temps réel
 onMounted(() => {
-    const channel = supabase.channel('stk_trx_headers_realtime')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'stk_trx_headers' }, () => {
-            refreshSTKHeaders()
+    const channel = supabase.channel('factures_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'factures' }, () => {
+            refreshFactures()
         })
         .subscribe()
 

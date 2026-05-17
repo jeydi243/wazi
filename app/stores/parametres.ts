@@ -6,6 +6,7 @@ export const useParametresStore = defineStore('parametres', () => {
   const user = useSupabaseUser()
   const lookups = ref<Lookup[]>([])
   const classes = ref<Classe[]>([])
+  const clients = ref<Client[]>([])
   const organisations = ref<Organisation[]>([])
   const affectations = ref<Affectation[]>([])
   let channels: any = null
@@ -16,6 +17,13 @@ export const useParametresStore = defineStore('parametres', () => {
   const getLookupsById = computed(() => (id: string) => {
     return lookups.value.find(lookup => lookup.id == id)?.nom
   })
+
+  const getTypeFactures = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_factures'))
+  const getTypeAvoirs = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_avoirs'))
+  const getModePaiement = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'mode_paiements'))
+  const getConditionPaiement = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'conditions_paiements'))
+  const getDevise = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'devises'))
+  const getClients = computed(() => clients.value)
 
   const getClasseItems = computed(() => {
     return classes.value.map(classe => ({
@@ -41,7 +49,7 @@ export const useParametresStore = defineStore('parametres', () => {
 
     const { data: affectationsData, error: affectationsError } = await supabase
       .from('affectations')
-      .select('id,date_debut,date_fin,client_id, user_id, organisation:organisation_id(id, nom, code, description, lookup:lookup_id(id, code, description, classe:classe_id(*,code,description)))')
+      .select('id, date_debut, date_fin, client_id, user_id, organisation:organisation_id(id, nom, code, description, lookup:type_id(id, code, description, classe:classe_id(*,code,description)))')
       .eq('user_id', user.value.id)
 
     if (affectationsData) affectations.value = affectationsData as unknown as Affectation[]
@@ -56,13 +64,13 @@ export const useParametresStore = defineStore('parametres', () => {
   }
 
   async function init() {
-    const { data: lookupsData, error: lookupsError } = await supabase.from('lookups').select('*, classe:classe_id(id, code,description)')
+    const { data: lookupsData, error: lookupsError } = await supabase.from('lookups').select('*, classe:classe_id(id, code, table_name, description)')
     if (lookupsData) lookups.value = lookupsData as unknown as Lookup[]
 
     const { data: classesData, error: classesError } = await supabase.from('classes').select('*')
     if (classesData) classes.value = classesData as unknown as Classe[]
 
-    const { data: organisationsData, error: organisationsError } = await supabase.from('organisations').select('*, lookup:lookup_id(id, code, description, classe:classe_id(id, code,description))')
+    const { data: organisationsData, error: organisationsError } = await supabase.from('organisations').select('*, lookup:type_id(id, code, description, classe:classe_id(id, code,description))')
     if (organisationsData) organisations.value = organisationsData as unknown as Organisation[]
 
 
@@ -116,6 +124,12 @@ export const useParametresStore = defineStore('parametres', () => {
     getAffectations,
     getAffectationsMagasin,
     getTypeOrganisation,
-    getEmplacements
+    getModePaiement,
+    getConditionPaiement,
+    getDevise,
+    getTypeAvoirs,
+    getClients,
+    getEmplacements,
+    getTypeFactures
   }
 })
