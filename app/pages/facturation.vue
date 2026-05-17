@@ -1,7 +1,7 @@
 <template>
-    <UDashboardPanel id="reception-externe" :ui-pro="{ body: 'p-5', header: 'p-0' }">
+    <UDashboardPanel id="facturation" :ui-pro="{ body: 'p-5', header: 'p-0' }">
         <template #header>
-            <UDashboardNavbar title="Reception Externe">
+            <UDashboardNavbar title="Facturation">
                 <template #leading>
                     <!-- <UDashboardSidebarCollapse /> -->
                 </template>
@@ -27,7 +27,7 @@
                             </UDropdownMenu>
                         </div>
                     </div>
-                    <StockAddReception @reception-added="refreshSTKHeaders" />
+                    <FacturationAddModal @facturation-added="refreshSTKHeaders" />
                 </template>
             </UDashboardNavbar>
         </template>
@@ -76,9 +76,9 @@ import type { STKHeader } from '~/types'
 
 // 1. SEO
 useHead({
-    title: 'Reception externe',
+    title: 'Facturation',
     meta: [
-        { name: 'description', content: 'Gérer les réceptions externes.' }
+        { name: 'description', content: 'Gérer les facturations.' }
     ]
 })
 

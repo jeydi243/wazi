@@ -20,6 +20,11 @@ const links = [[{
     to: '/settings/organisations'
 },
 {
+    label: 'Articles',
+    icon: 'icon-park-outline:ad-product',
+    to: '/settings/articles'
+},
+{
     label: 'Grille Tarifaire',
     icon: 'i-lucide-shield',
     to: '/settings/tarifaire'
@@ -29,20 +34,11 @@ const links = [[{
     icon: 'i-lucide-shield',
     to: '/settings/users'
 },
+
 {
-    label: 'Roles et Acces',
-    icon: 'i-lucide-shield',
-    to: '/settings/access'
-},
-{
-    label: 'Articles',
+    label: 'Clients',
     icon: 'icon-park-outline:ad-product',
-    to: '/settings/articles'
-},
-{
-    label: 'Fournisseurs',
-    icon: 'icon-park-outline:ad-product',
-    to: '/settings/fournisseurs'
+    to: '/settings/clients'
 },
 {
     label: 'Security',

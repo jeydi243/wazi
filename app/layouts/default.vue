@@ -39,14 +39,6 @@ const links = [
         }
     },
     {
-        label: 'Rendez-vous',
-        icon: 'solar:calendar-mark-bold-duotone',
-        to: '/rendez-vous',
-        onSelect: () => {
-            open.value = false
-        }
-    },
-    {
         label: 'Stock',
         to: '/stock',
         icon: 'solar:posts-carousel-vertical-broken',
@@ -90,14 +82,6 @@ const links = [
                 open.value = false
             }
         }]
-    },
-    {
-        label: 'Partenaires',
-        icon: 'solar:buildings-2-bold-duotone',
-        to: '/partenaires',
-        onSelect: () => {
-            open.value = false
-        }
     },
     {
         label: 'Parametres',

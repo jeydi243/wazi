@@ -2,7 +2,7 @@
     <div>
         <UDashboardPanel id="inbox-900" :ui-pro="{ body: 'p-0' }">
             <template #header>
-                <UDashboardNavbar title="Fournisseurs">
+                <UDashboardNavbar title="Clients">
                     <template #leading>
                         <!-- <UDashboardSidebarCollapse /> -->
                     </template>
@@ -12,14 +12,14 @@
                             <UInput v-model="searchInput" class="max-w-sm" icon="i-lucide-search"
                                     placeholder="Rechercher un article..." />
                         </div>
-                        <FournisseursAddModal @article-added="refreshFournisseurs" />
+                        <ClientsAddModal @client-added="refreshClients" />
                     </template>
                 </UDashboardNavbar>
             </template>
             <template #body>
                 <UTable ref="table" v-model:column-filters="columnFilters" v-model:column-visibility="columnVisibility"
                         v-model:row-selection="rowSelection" v-model:pagination="pagination"
-                        :pagination-options="paginationOptions" class="shrink-0 m-2" :data="Fournisseurs || []"
+                        :pagination-options="paginationOptions" class="shrink-0 m-2" :data="clients || []"
                         :columns="columns" :loading="pending" :ui="{
                             base: 'table-fixed border-separate border-spacing-0 border border-(--ui-border) rounded-xl',
                             thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
@@ -40,19 +40,19 @@
                 </div>
             </template>
         </UDashboardPanel>
-        <FournisseursDetails v-model:open="openDetailsFournisseur" :fournisseur="selectedFournisseur" />
-        <FournisseursAffectations v-model:open="openDetailsAffectation" :fournisseur="selectedFournisseur" />
+        <ClientsDetails v-model:open="openDetailsClient" :client="selectedClient" />
+
     </div>
 </template>
 <script setup lang="ts">
 import type { Row } from '@tanstack/table-core'
 import type { TableColumn } from '@nuxt/ui'
-import type { Fournisseur } from '~/types'
+import type { Client } from '~/types'
 
 useHead({
-    title: 'Fournisseurs',
+    title: 'Clients',
     meta: [
-        { name: 'description', content: 'Gérer les Fournisseurs' }
+        { name: 'description', content: 'Gérer les Clients' }
     ]
 })
 
@@ -78,9 +78,8 @@ const {
     setPage
 } = useDataTable({ filterColumnId: 'nom', pageSize: 10 })
 
-const openDetailsFournisseur = ref(false)
-const openDetailsAffectation = ref(false)
-const selectedFournisseur = ref<Fournisseur | null>(null)
+const openDetailsClient = ref(false)
+const selectedClient = ref<Client | null>(null)
 
 const { copy } = useClipboard()
 const searchInput = ref('')
@@ -93,7 +92,7 @@ watch(searchInput, (val) => {
     debouncedSearch(val)
 })
 
-const columns: TableColumn<Fournisseur>[] = [
+const columns: TableColumn<Client>[] = [
     {
         id: 'details',
         header: 'Détails',
@@ -102,8 +101,8 @@ const columns: TableColumn<Fournisseur>[] = [
             variant: 'ghost',
             icon: 'i-lucide-eye',
             onClick: () => {
-                selectedFournisseur.value = row.original
-                openDetailsFournisseur.value = !openDetailsFournisseur.value
+                selectedClient.value = row.original
+                openDetailsClient.value = !openDetailsClient.value
             }
         }),
     },
@@ -141,17 +140,6 @@ const columns: TableColumn<Fournisseur>[] = [
         }
     },
     {
-        accessorKey: 'type_id',
-        header: 'Type',
-        cell: ({ row }) => {
-            return h('div', { class: 'flex items-center gap-3' }, [
-                h('div', undefined, [
-                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, getLookupsById(row.original.type?.id)),
-                ])
-            ])
-        }
-    },
-    {
         header: () => h('div', { class: 'text-center' }, 'Actions'),
         id: 'actions',
         cell: ({ row }) => {
@@ -176,7 +164,7 @@ const columns: TableColumn<Fournisseur>[] = [
     }
 ]
 
-function getRowItems(row: Row<Fournisseur>) {
+function getRowItems(row: Row<Client>) {
     return [
         {
             type: 'label',
@@ -200,15 +188,15 @@ function getRowItems(row: Row<Fournisseur>) {
             label: 'Voir les détails',
             icon: 'material-symbols:open-in-full-rounded',
             onSelect() {
-                selectedFournisseur.value = row.original
-                openDetailsFournisseur.value = true
+                selectedClient.value = row.original
+                openDetailsClient.value = true
             }
         },
         {
             label: 'Voir les affectations',
             icon: 'material-symbols-light:add-link',
             onSelect() {
-                openDetailsAffectation.value = !openDetailsAffectation.value
+                // openDetailsAffectation.value = !openDetailsAffectation.value
             }
         },
         {
@@ -232,15 +220,15 @@ function getRowItems(row: Row<Fournisseur>) {
                         description: `L'article "${row.original.nom}" a été supprimé.`,
                         color: 'success'
                     })
-                    await refreshFournisseurs()
+                    await refreshClients()
                 }
             }
         }
     ]
 }
 
-const { data: Fournisseurs, pending, refresh: refreshFournisseurs } = await useAsyncData('Fournisseurs', async () => {
-    const { data, error } = await supabase.from('fournisseurs').select('*')
+const { data: clients, pending, refresh: refreshClients } = await useAsyncData('clients', async () => {
+    const { data, error } = await supabase.from('clients').select('*')
     if (error) {
         throw error
     }

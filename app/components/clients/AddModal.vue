@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
-import type { Article, Lookup } from '~/types'
+import type { Client, Lookup } from '~/types'
 
-const ArticleSchema = z.object({
+const ClientSchema = z.object({
     code: z.string().min(6, 'Code must be at least 6 characters'),
     nom: z.string().min(6, 'Name must be at least 6 characters'),
     description: z.string().min(5, 'Description must be at least 5 characters'),
@@ -12,7 +12,7 @@ const ArticleSchema = z.object({
 const supabase = useSupabaseClient()
 const open = ref(false)
 const toast = useToast()
-type Schema = z.output<typeof ArticleSchema>
+type Schema = z.output<typeof ClientSchema>
 
 const state = reactive<Partial<Schema>>({
     code: generateRandomCode(),
@@ -30,9 +30,9 @@ function generateRandomCode(length = 6) {
     return result
 }
 
-const { data: lookups } = await useAsyncData<Lookup[]>('lookups-fournisseurs', async () => {
-    const { data } = await supabase.from('lookups').select('id, nom, classes!inner(*)').eq('classes.table_name', 'TYPE_ARTICLES')
-    return (data || []) as unknown as Lookup[]
+const { data: lookups } = await useAsyncData<Client[]>('clients-type', async () => {
+    const { data } = await supabase.from('lookups').select('*').eq('classes.table_name', 'TYPE_CLIENTS')
+    return (data || []) as unknown as Client[]
 })
 
 const items = computed<SelectMenuItem[]>(() => lookups.value?.map(lookup => ({
@@ -40,20 +40,20 @@ const items = computed<SelectMenuItem[]>(() => lookups.value?.map(lookup => ({
     id: String(lookup?.id)
 })) || [])
 
-const emit = defineEmits(['fournisseur-added'])
+const emit = defineEmits(['client-added'])
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     const { data, error } = await supabase
-        .from('fournisseurs')
+        .from('clients')
         .insert(event?.data as any)
         .select()
 
     if (error) {
-        toast.add({ title: 'Error', description: `Can't add new fournisseur ${error.message}`, color: 'error' })
+        toast.add({ title: 'Error', description: `Can't add new client ${error.message}`, color: 'error' })
     } else {
-        toast.add({ title: 'Success', description: `New fournisseur ${event.data.nom} added`, color: 'success' })
+        toast.add({ title: 'Success', description: `New client ${event.data.nom} added`, color: 'success' })
         open.value = false
-        emit('fournisseur-added')
+        emit('client-added')
         // Réinitialiser le code après soumission réussie
         state.code = generateRandomCode()
     }
@@ -61,11 +61,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 </script>
 
 <template>
-    <UModal v-model:open="open" title="Ajouter un fournisseur" description="Ajouter un fournisseur">
-        <UButton label="Ajouter un fournisseur" icon="i-lucide-plus" />
+    <UModal v-model:open="open" title="Ajouter un client" description="Ajouter un client">
+        <UButton label="Ajouter un client" icon="i-lucide-plus" />
 
         <template #body>
-            <UForm :schema="ArticleSchema" :state="state" class="space-y-4" @submit="onSubmit">
+            <UForm :schema="ClientSchema" :state="state" class="space-y-4" @submit="onSubmit">
                 <UFormField label="Code" name="code">
                     <UInput v-model="state.code" class="w-full" placeholder="Code de l'article">
                         <template #trailing>
@@ -84,7 +84,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
                 <div class="flex justify-end gap-2">
                     <UButton label="Annuler" color="neutral" variant="subtle" @click="open = false" />
-                    <UButton label="Ajouter un fournisseur" color="primary" variant="solid" type="submit" />
+                    <UButton label="Ajouter un client" color="primary" variant="solid" type="submit" />
                 </div>
             </UForm>
         </template>
