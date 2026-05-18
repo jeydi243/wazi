@@ -3,17 +3,10 @@ import * as z from 'zod'
 import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import type { Client, Lookup } from '~/types'
 
-const ClientSchema = z.object({
-    code: z.string().min(1, 'Code must be at least 1 character'),
-    nom: z.string().min(1, 'Name must be at least 1 character'),
-    description: z.string().min(1, 'Description must be at least 1 character'),
-    type_id: z.string().optional()
-})
 const parametresStore = useParametresStore()
 const supabase = useSupabaseClient()
 const open = ref(false)
 const toast = useToast()
-type Schema = z.output<typeof ClientSchema>
 
 const getTypeClient = computed(() => parametresStore.getTypeClient)
 
@@ -22,11 +15,35 @@ const itemsTypeClient = computed<SelectMenuItem[]>(() => getTypeClient.value?.ma
     id: item.id
 })) || [])
 
+const selectedTypeCode = computed(() => {
+    return getTypeClient.value?.find((item: any) => item.id === state.type_id)?.code
+})
+
+const ClientSchema = z.object({
+    code: z.string().min(1, 'Code must be at least 1 character'),
+    nom: z.string().min(1, 'Name must be at least 1 character'),
+    description: z.string().min(1, 'Description must be at least 1 character'),
+    nif: z.string().optional(),
+    type_id: z.string().min(1, 'Veuillez sélectionner un type de client')
+}).refine(data => {
+    const code = getTypeClient.value?.find((item: any) => item.id === data.type_id)?.code;
+    if (code != 'PP') {
+        return !!data.nif && data.nif.trim().length > 0;
+    }
+    return true;
+}, {
+    message: "Le NIF est requis pour ce type de client",
+    path: ["nif"]
+})
+
+type Schema = z.output<typeof ClientSchema>
+
 const state = reactive<Partial<Schema>>({
     code: generateRandomCode(),
     nom: undefined,
     description: undefined,
     type_id: undefined,
+    nif: undefined,
 })
 
 function generateRandomCode(length = 6) {
@@ -84,6 +101,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 </UFormField>
                 <UFormField label="Nom" name="nom">
                     <UInput v-model="state.nom" class="w-full" placeholder="Nom de l'article" />
+                </UFormField>
+                <UFormField label="Type de client" name="type_id">
+                    <USelectMenu v-model="state.type_id" value-key="id" :items="itemsTypeClient" class="w-full" />
+                </UFormField>
+                <UFormField v-if="selectedTypeCode != 'PP'" label="NIF" name="nif">
+                    <UInput v-model="state.nif" class="w-full" placeholder="NIF" />
                 </UFormField>
 
                 <UFormField label="Description" name="description">

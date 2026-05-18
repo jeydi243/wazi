@@ -101,14 +101,14 @@ const pagination = ref({
 })
 const columnVisibility = ref()
 const isStopModalOpen = ref(false)
-const selectedTarrifaireId = ref<number | null>(null)
+const selectedTarrifaireId = ref<string | null>(null)
 
 async function stopTarrifaireLine() {
     if (!selectedTarrifaireId.value) return
 
     const { error } = await supabase
         .from('tarifaires')
-        .update({ end_date: new Date().toISOString() })
+        .update({ end_date: new Date().toISOString() } as never)
         .eq('id', selectedTarrifaireId.value)
 
     if (error) {

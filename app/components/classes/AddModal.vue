@@ -5,6 +5,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 const schema = z.object({
     nom: z.string().min(3, 'Too short'),
     description: z.string(),
+    code: z.string(),
     table_name: z.string(),
 })
 const open = ref(false)
@@ -15,9 +16,17 @@ const state = reactive<Partial<Schema>>({
     nom: undefined,
     description: undefined,
     table_name: undefined,
+    code: undefined,
 })
 
-
+function generateRandomCode(length = 6) {
+    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
+    let result = ''
+    for (let i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * characters.length))
+    }
+    return result
+}
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     const { data, error } = await supabase
         .from('classes')
@@ -39,6 +48,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
         <template #body>
             <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+                <UFormField label="Code" name="code">
+                    <UInput v-model="state.code" class="w-full" placeholder="Code de l'article">
+                        <template #trailing>
+                            <UButton icon="i-lucide-refresh-cw" color="neutral" variant="ghost" size="xs"
+                                     @click="state.code = generateRandomCode()" />
+                        </template>
+                    </UInput>
+                </UFormField>
                 <UFormField label="Nom" placeholder="John Doe" name="nom">
                     <UInput v-model="state.nom" class="w-full" />
                 </UFormField>

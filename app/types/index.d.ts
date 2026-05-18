@@ -108,6 +108,7 @@ export interface Client {
     nom: string
     code: string
     description: string
+    nif: string
     type: Lookup
     created_at?: string
 }

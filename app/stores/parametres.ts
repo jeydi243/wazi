@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Lookup, Classe, Organisation, Affectation } from '~/types'
+import type { Lookup, Classe, Organisation, Affectation, Facture, Client } from '~/types'
 
 export const useParametresStore = defineStore('parametres', () => {
   const supabase = useSupabaseClient()
@@ -9,6 +9,7 @@ export const useParametresStore = defineStore('parametres', () => {
   const clients = ref<Client[]>([])
   const organisations = ref<Organisation[]>([])
   const affectations = ref<Affectation[]>([])
+  const invoiceHeaders = ref<Facture[]>([])
   let channels: any = null
 
   const getClasseById = computed(() => (id: string) => {
@@ -23,7 +24,7 @@ export const useParametresStore = defineStore('parametres', () => {
   const getModePaiement = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'mode_paiements'))
   const getConditionPaiement = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'conditions_paiements'))
   const getDevise = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'devises'))
-  const getTypeClient = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_client'))
+  const getTypeClient = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_clients'))
 
   const getClasseItems = computed(() => {
     return classes.value.map(classe => ({
@@ -73,6 +74,12 @@ export const useParametresStore = defineStore('parametres', () => {
     const { data: organisationsData, error: organisationsError } = await supabase.from('organisations').select('*, lookup:type_id(id, code, description, classe:classe_id(id, code,description))')
     if (organisationsData) organisations.value = organisationsData as unknown as Organisation[]
 
+    const { data: invoicesData, error: invoicesError } = await supabase.from('invoices').select('*')
+    if (invoicesData) invoiceHeaders.value = invoicesData as unknown as Facture[]
+
+    const { data: clientsData, error: clientsError } = await supabase.from('clients').select('*')
+    if (clientsData) clients.value = clientsData as unknown as Client[]
+
 
     if (!channels) {
       channels = supabase.channel('custom-all-channel')
@@ -104,9 +111,11 @@ export const useParametresStore = defineStore('parametres', () => {
       data: {
         lookups: lookupsData,
         classes: classesData,
-        organisations: organisationsData
+        organisations: organisationsData,
+        invoices: invoicesData,
+        clients: clientsData
       },
-      error: lookupsError || classesError || organisationsError,
+      error: lookupsError || classesError || organisationsError || clientsError || invoicesError,
       loading: false
     }
   }
@@ -114,6 +123,7 @@ export const useParametresStore = defineStore('parametres', () => {
   return {
     lookups,
     classes,
+    invoiceHeaders,
     organisations,
     affectations,
     getClasseById,

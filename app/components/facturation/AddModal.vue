@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
-import type { Lookup, STKHeader } from '~/types'
+
 import { CalendarDate, getLocalTimeZone } from '@internationalized/date'
 
 const open = ref(false)
@@ -13,24 +13,35 @@ const parametresStore = useParametresStore()
 
 const schema = z.object({
     client_id: z.string({ message: 'Veuillez selectionner un client' }),
-    type_facture: z.string({ message: 'Veuillez selectionner le type de facture' }),
+    type_facture_id: z.string({ message: 'Veuillez selectionner le type de facture' }),
     type_avoir: z.string({ message: 'Veuillez selectionner le type d\'avoir' }).optional(),
     numero_facture: z.string().optional(),
+    invoice_header_id: z.string().optional(),
     devise: z.string({ message: 'Devise requis' }),
     mode_paiement: z.string({ message: 'Mode de paiement requis' }),
     condition_paiement: z.string({ message: 'Condition de paiement requis' }),
     date_facture: z.date({ message: 'Date de facture requis' }),
     user_id: z.string({ message: 'Utilisateur requis' })
+}).refine(data => {
+    const code = getTypeFactures.value?.find((item: any) => item.id === data.type_facture_id)?.code;
+    if (["FA", "EA"].includes(code || '') && (!data.invoice_header_id || data.invoice_header_id?.trim()?.length === 0)) {
+        return false;
+    }
+    return true;
+}, {
+    message: "Vous devez indiquer une facture initiale",
+    path: ["invoice_header_id"]
 })
 
 const state = reactive<Partial<Schema>>({
     client_id: undefined,
-    type_facture: undefined,
+    type_facture_id: undefined,
     mode_paiement: undefined,
     condition_paiement: undefined,
     devise: undefined,
     date_facture: undefined,
     numero_facture: undefined,
+    invoice_header_id: undefined,
     user_id: user.value?.id || ''
 })
 const toCalendarDate = (date: Date) => {
@@ -41,11 +52,12 @@ const toCalendarDate = (date: Date) => {
     )
 }
 
-const getTypeFactures = computed(() => parametresStore.getTypeFactures)  
-const getDevises = computed(() => parametresStore.getDevise)  
+const getTypeFactures = computed(() => parametresStore.getTypeFactures)
+const getDevises = computed(() => parametresStore.getDevise)
 const getTypeAvoirs = computed(() => parametresStore.getTypeAvoirs)
 const getModePaiements = computed(() => parametresStore.getModePaiement)
 const getConditionPaiements = computed(() => parametresStore.getConditionPaiement)
+const getInvoiceHeaders = computed(() => parametresStore.invoiceHeaders)
 const getClients = computed(() => parametresStore.clients)
 
 
@@ -82,8 +94,16 @@ const itemsClients = computed<SelectMenuItem[]>(() => getClients.value?.map((ite
     label: item.nom,
     id: item.id
 })) || [])
+const itemsInvoiceHeaders = computed<SelectMenuItem[]>(() => getInvoiceHeaders.value?.map((item: any) => ({
+    label: item.nom,
+    id: item.id
+})) || [])
 
 const emit = defineEmits(['facture-added'])
+
+const selectedTypeCode = computed(() => {
+    return getTypeFactures.value?.find((item: any) => item.id === state.type_facture_id)?.code
+})
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     const { data, error } = await supabase
@@ -103,31 +123,41 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
 
 <template>
-    <UModal v-model:open="open" title="Facturation" description="Ajouter une facture">
+    <USlideover v-model:open="open" title="Facturation" description="Ajouter une facture"
+        :ui="{ content: 'max-w-4xl' }">
         <UButton label="Nouvelle Facture" icon="i-lucide-plus" />
 
         <template #body>
             <UForm :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
-                <UFormField label="Client" placeholder="_" name="client_id">
-                    <USelectMenu v-model="state.client_id" value-key="id" :items="itemsClients" class="w-full" />
-                </UFormField>
-                <UFormField label="Type facture" placeholder="" name="type_facture">
-                    <USelectMenu v-model="state.type_facture" value-key="id" :items="itemsTypeFacture"
-                        empty="Aucun magasin disponible" class="w-full" />
-                </UFormField>
-                <UFormField v-if="state.type_facture === 'AVOIR'" label="Type d'avoir" placeholder="" name="type_avoir">
-                    <USelectMenu v-model="state.type_avoir" value-key="id" :items="itemsTypeAvoir"
-                        empty="Aucun magasin disponible" class="w-full" />
-                </UFormField>
-                <UFormField label="Mode de paiement" placeholder="" name="mode_paiement">
-                    <USelectMenu v-model="state.mode_paiement" value-key="id" :items="itemsModePaiements" class="w-full" />
-                </UFormField>
-                <UFormField label="Condition de paiement" placeholder="" name="condition_paiement">
-                    <USelectMenu v-model="state.condition_paiement" value-key="id" :items="itemsConditionPaiements" class="w-full" />
-                </UFormField>
-                <UFormField label="Devise" placeholder="" name="devise">
-                    <USelectMenu v-model="state.devise" value-key="id" :items="itemsDevises" class="w-full" />
-                </UFormField>
+                <div class="grid grid-cols-2 gap-2">
+                    <UFormField label="Client" placeholder="_" name="client_id">
+                        <USelectMenu v-model="state.client_id" value-key="id" :items="itemsClients" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Type facture" placeholder="" name="type_facture_id">
+                        <USelectMenu v-model="state.type_facture_id" value-key="id" :items="itemsTypeFacture"
+                            empty="Aucun magasin disponible" class="w-full" />
+                    </UFormField>
+                    <div v-if="['FA', 'EA'].includes(selectedTypeCode ?? '')" class="grid grid-cols-2 gap-2">
+                        <UFormField label="Type d'avoir" placeholder="" name="type_avoir">
+                            <USelectMenu v-model="state.type_avoir" value-key="id" :items="itemsTypeAvoir"
+                                empty="Aucun magasin disponible" class="w-full" />
+                        </UFormField>
+                        <UFormField label="Facture initiale" placeholder="" name="invoice_header_id">
+                            <UInputMenu v-model="state.invoice_header_id" :items="itemsInvoiceHeaders" class="w-full" />
+                        </UFormField>
+                    </div>
+                    <UFormField label="Mode de paiement" placeholder="" name="mode_paiement">
+                        <USelectMenu v-model="state.mode_paiement" value-key="id" :items="itemsModePaiements"
+                            class="w-full" />
+                    </UFormField>
+                    <UFormField label="Condition de paiement" placeholder="" name="condition_paiement">
+                        <USelectMenu v-model="state.condition_paiement" value-key="id" :items="itemsConditionPaiements"
+                            class="w-full" />
+                    </UFormField>
+                    <UFormField label="Devise" placeholder="" name="devise">
+                        <USelectMenu v-model="state.devise" value-key="id" :items="itemsDevises" class="w-full" />
+                    </UFormField>
+                </div>
 
                 <div class="flex justify-end gap-2">
                     <UButton label="Annuler" color="neutral" variant="subtle" @click="open = false" />
@@ -135,5 +165,5 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 </div>
             </UForm>
         </template>
-    </UModal>
+    </USlideover>
 </template>

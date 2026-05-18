@@ -40,7 +40,8 @@
                 </div>
             </template>
         </UDashboardPanel>
-        <ClientsUpdateModal v-model:open="openDetailsClient" :client="selectedClient" />
+
+        <ClientsUpdateModal v-model:open="openDetailsClient" :client="selectedClient" @client-updated="refreshClients" />
 
     </div>
 </template>
@@ -105,6 +106,16 @@ const columns: TableColumn<Client>[] = [
                 openDetailsClient.value = !openDetailsClient.value
             }
         }),
+    },{
+        accessorKey: 'code',
+        header: 'Code',
+        cell: ({ row }) => {
+            return h('div', { class: 'flex items-center gap-3' }, [
+                h('div', undefined, [
+                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.code),
+                ])
+            ])
+        }
     },
     {
         accessorKey: 'nom',
@@ -118,16 +129,28 @@ const columns: TableColumn<Client>[] = [
         }
     },
     {
-        accessorKey: 'code',
-        header: 'Code',
+        accessorKey: 'type_id',
+        header: 'Type',
         cell: ({ row }) => {
             return h('div', { class: 'flex items-center gap-3' }, [
                 h('div', undefined, [
-                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.code),
+                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original?.type?.nom),
                 ])
             ])
         }
     },
+    {
+        accessorKey: 'nif',
+        header: 'NIF',
+        cell: ({ row }) => {
+            return h('div', { class: 'flex items-center gap-3' }, [
+                h('div', undefined, [
+                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original?.nif),
+                ])
+            ])
+        }
+    },
+    
     {
         accessorKey: 'description',
         header: 'Description',
@@ -228,7 +251,7 @@ function getRowItems(row: Row<Client>) {
 }
 
 const { data: clients, pending, refresh: refreshClients } = await useAsyncData('clients', async () => {
-    const { data, error } = await supabase.from('clients').select('*')
+    const { data, error } = await supabase.from('clients').select('*, type:type_id(*)')
     if (error) {
         throw error
     }
