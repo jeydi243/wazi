@@ -15,7 +15,7 @@ const links = [[{
     icon: 'i-lucide-users',
     to: '/settings/lookups'
 }, {
-    label: 'Organisations',
+    label: 'Point de facturation',
     icon: 'octicon:organization-16',
     to: '/settings/organisations'
 },
@@ -24,6 +24,7 @@ const links = [[{
     icon: 'icon-park-outline:ad-product',
     to: '/settings/articles'
 },
+
 {
     label: 'Grille Tarifaire',
     icon: 'i-lucide-shield',

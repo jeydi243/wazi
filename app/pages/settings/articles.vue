@@ -10,7 +10,7 @@
                     <template #right>
                         <div class="flex flex-wrap items-center justify-between gap-1.5">
                             <UInput v-model="searchInput" class="max-w-sm" icon="i-lucide-search"
-                                    placeholder="Rechercher un article..." />
+                                placeholder="Rechercher un article..." />
                         </div>
                         <ArticlesAddModal @article-added="refreshArticles" />
                     </template>
@@ -18,15 +18,15 @@
             </template>
             <template #body>
                 <UTable ref="table" v-model:column-filters="columnFilters" v-model:column-visibility="columnVisibility"
-                        v-model:row-selection="rowSelection" v-model:pagination="pagination"
-                        :pagination-options="paginationOptions" class="shrink-0 m-2" :data="Articles || []"
-                        :columns="columns" :loading="pending" :ui="{
-                            base: 'table-fixed border-separate border-spacing-0 border border-(--ui-border) rounded-lg',
-                            thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
-                            tbody: '[&>tr]:last:[&>td]:border-b-0',
-                            th: 'py-1 first:rounded-tl-[calc(var(--ui-radius)*2)] last:rounded-tr-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r pl-2',
-                            td: 'border-b border-(--ui-border) p-2'
-                        }" />
+                    v-model:row-selection="rowSelection" v-model:pagination="pagination"
+                    :pagination-options="paginationOptions" class="shrink-0 m-2" :data="Articles || []"
+                    :columns="columns" :loading="pending" :ui="{
+                        base: 'table-fixed border-separate border-spacing-0 border border-(--ui-border) rounded-lg',
+                        thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
+                        tbody: '[&>tr]:last:[&>td]:border-b-0',
+                        th: 'py-1 first:rounded-tl-[calc(var(--ui-radius)*2)] last:rounded-tr-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r pl-2',
+                        td: 'border-b border-(--ui-border) p-2'
+                    }" />
 
                 <div class="flex items-center justify-between gap-3 border-t border-(--ui-border) pt-4 mt-auto">
                     <div class="text-sm text-(--ui-text-muted)">
@@ -35,7 +35,7 @@
 
                     <div class="flex items-center gap-1.5">
                         <UPagination :default-page="currentPage" :items-per-page="currentPageSize"
-                                     :total="totalFilteredRows" @update:page="setPage" />
+                            :total="totalFilteredRows" @update:page="setPage" />
                     </div>
                 </div>
             </template>
@@ -104,7 +104,7 @@ const uniqueLookups = computed(() => {
 })
 
 const lookupFilterItems = computed(() => {
-    const filter = columnFilters.value.find(f => f.id === 'lookup_id')
+    const filter = columnFilters.value.find(f => f.id === 'type_article_id')
     const filterValue = (filter?.value as string[]) || []
 
     return uniqueLookups.value.map(lookup => ({
@@ -119,12 +119,12 @@ const lookupFilterItems = computed(() => {
                 next = next.filter(id => id !== lookup.id)
             }
 
-            const idx = columnFilters.value.findIndex(f => f.id === 'lookup_id')
+            const idx = columnFilters.value.findIndex(f => f.id === 'type_article_id')
             if (next.length) {
                 if (idx > -1) {
-                    columnFilters.value[idx] = { id: 'lookup_id', value: next }
+                    columnFilters.value[idx] = { id: 'type_article_id', value: next }
                 } else {
-                    columnFilters.value.push({ id: 'lookup_id', value: next })
+                    columnFilters.value.push({ id: 'type_article_id', value: next })
                 }
             } else if (idx > -1) {
                 columnFilters.value.splice(idx, 1)
@@ -329,7 +329,7 @@ function getRowItems(row: Row<Article>) {
 }
 
 const { data: Articles, pending, refresh: refreshArticles } = await useLazyAsyncData('articles', async () => {
-    const { data, error } = await supabase.from('articles').select('*, lookup:lookup_id(*), unite_conso:unite_conso_id(*), unite_stock:unite_stock_id(*)')
+    const { data, error } = await supabase.from('articles').select('*, lookup:type_article_id(*), unite_conso:unite_conso_id(*), unite_stock:unite_stock_id(*)')
     if (error) {
         throw error
     }

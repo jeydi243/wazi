@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import * as z from 'zod'
 import type { FormSubmitEvent } from '@nuxt/ui'
+import { generateRandomCode } from '~/utils'
 
 const schema = z.object({
     nom: z.string().min(3, 'Too short'),
@@ -19,14 +20,7 @@ const state = reactive<Partial<Schema>>({
     code: undefined,
 })
 
-function generateRandomCode(length = 6) {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let result = ''
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length))
-    }
-    return result
-}
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     const { data, error } = await supabase
         .from('classes')

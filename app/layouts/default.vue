@@ -95,6 +95,13 @@ const links = [
             onSelect: () => {
                 open.value = false
             }
+        },{
+            label: 'Point de facturation',
+            to: '/settings/organisations',
+            icon: 'solar:card-transfer-bold-duotone',
+            onSelect: () => {
+                open.value = false
+            }
         },
         {
             label: 'Grille tarifaire',

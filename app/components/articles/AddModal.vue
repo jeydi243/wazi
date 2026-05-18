@@ -4,23 +4,25 @@ import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import type { Article, Lookup } from '~/types'
 
 const ArticleSchema = z.object({
+    type_article_id: z.string().min(6, 'Code must be at least 6 characters'),
     code: z.string().min(6, 'Code must be at least 6 characters'),
     nom: z.string().min(6, 'Name must be at least 6 characters'),
     description: z.string().min(5, 'Description must be at least 5 characters'),
-    lookup_id: z.string(),
-    unite_conso_id: z.string(),
-    unite_stock_id: z.string()
+    lookup_id: z.string().optional(),
+    unite_conso_id: z.string().optional(),
+    unite_stock_id: z.string().optional()
 })
 const supabase = useSupabaseClient()
 const open = ref(false)
 const toast = useToast()
 type Schema = z.output<typeof ArticleSchema>
-
+const parametresStore = useParametresStore()
 const state = reactive<Partial<Schema>>({
     code: undefined,
     nom: undefined,
     description: undefined,
     lookup_id: undefined,
+    type_article_id: undefined,
 })
 const { data: lookups } = await useAsyncData<Lookup[]>('lookups-articles', async () => {
     const { data } = await supabase.from('lookups').select('id, nom, classes!inner(*)').eq('classes.table_name', 'TYPE_ARTICLES')
@@ -37,6 +39,12 @@ const itemsUOM = computed<SelectMenuItem[]>(() => lookups.value?.map(lookup => (
     id: String(lookup?.id)
 })) || [])
 
+const getTypeArticle = computed(() => parametresStore.getTypeArticles)
+
+const itemsTypeArticle = computed<SelectMenuItem[]>(() => getTypeArticle.value?.map((item: any) => ({
+    label: item.nom,
+    id: item.id
+})) || [])
 const emit = defineEmits(['article-added'])
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
@@ -61,6 +69,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 
         <template #body>
             <UForm :schema="ArticleSchema" :state="state" class="space-y-4" @submit="onSubmit">
+                <UFormField label="Type d'article" name="type_article_id">
+                    <USelectMenu v-model="state.type_article_id" value-key="id" :items="itemsTypeArticle"
+                        class="w-full" />
+                </UFormField>
                 <UFormField label="Code" name="code">
                     <UInput v-model="state.code" class="w-full" placeholder="Code de l'article" />
                 </UFormField>
@@ -72,15 +84,17 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                     <UTextarea v-model="state.description" class="w-full" placeholder="Description de l'article" />
                 </UFormField>
 
-                <UFormField label="Type d'article" name="lookup_id">
+                <UFormField label="Catégorie d'article" name="lookup_id">
                     <USelectMenu v-model="state.lookup_id" value-key="id" :items="items" class="w-full" />
                 </UFormField>
-                <UFormField label="Unite de consommation" name="unite_conso_id">
-                    <USelectMenu v-model="state.unite_conso_id" value-key="id" :items="itemsUOM" class="w-full" />
-                </UFormField>
-                <UFormField label="Unite de stock" name="unite_stock_id">
-                    <USelectMenu v-model="state.unite_stock_id" value-key="id" :items="itemsUOM" class="w-full" />
-                </UFormField>
+                <div class="flex flex-row space-x-4">
+                    <UFormField label="Unite de consommation" name="unite_conso_id">
+                        <USelectMenu v-model="state.unite_conso_id" value-key="id" :items="itemsUOM" class="w-full" />
+                    </UFormField>
+                    <UFormField label="Unite de stock" name="unite_stock_id">
+                        <USelectMenu v-model="state.unite_stock_id" value-key="id" :items="itemsUOM" class="w-full" />
+                    </UFormField>
+                </div>
 
                 <div class="flex justify-end gap-2">
                     <UButton label="Annuler" color="neutral" variant="subtle" @click="open = false" />

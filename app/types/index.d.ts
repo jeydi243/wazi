@@ -87,6 +87,7 @@ export interface Organisation {
     code?: string
     lookup?: Lookup
     status?: string
+    nid?: string
     prefixe?: string,
     organisation_parent?: Organisation
     organisation_parent_id?: string
@@ -176,15 +177,6 @@ export interface PatientOrg {
     date_fin: string
 }
 
-export interface Mutuelle {
-    id: string
-    nom: string
-    code: string
-    description: string
-    lookup_id: string
-    statut: string
-    organisation_id: string
-}
 export interface PatientMutuelle {
     id: string
     mutuelle: Mutuelle
@@ -268,7 +260,7 @@ export interface Facture {
     numero_livraison?: string
     numero_document: string
     statut: string
-    type_facture: string
+    invoice_type: Lookup
     montant_ttc: number
     montant_tva: number
     montant_ht: number

@@ -2,6 +2,7 @@
 import * as z from 'zod'
 import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import type { Client, Lookup } from '~/types'
+import { generateRandomCode } from '~/utils'
 
 const parametresStore = useParametresStore()
 const supabase = useSupabaseClient()
@@ -45,15 +46,6 @@ const state = reactive<Partial<Schema>>({
     type_id: undefined,
     nif: undefined,
 })
-
-function generateRandomCode(length = 6) {
-    const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-    let result = ''
-    for (let i = 0; i < length; i++) {
-        result += characters.charAt(Math.floor(Math.random() * characters.length))
-    }
-    return result
-}
 
 const { data: lookups } = await useAsyncData<Client[]>('clients-type', async () => {
     const { data } = await supabase.from('lookups').select('*').eq('classes.table_name', 'TYPE_CLIENTS')
