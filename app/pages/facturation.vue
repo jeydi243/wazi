@@ -27,7 +27,7 @@
                             </UDropdownMenu>
                         </div>
                     </div>
-                    <FacturationAddModal @facturation-added="refreshFactures" />
+                    <FacturationAddModal v-model:open="openSlideOver" @facturation-added="refreshFactures" :header="selectedFacture" />
                 </template>
             </UDashboardNavbar>
         </template>
@@ -155,7 +155,7 @@ const columns: TableColumn<Facture>[] = [
         cell: ({ row }) => h('p', { class: 'font-medium' }, row.original.numero_facture)
     },
     {
-        accessorKey: 'montant',
+        accessorKey: 'montant_ht',
         header: 'Montant HT',
         cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.montant_ht)
     },
@@ -290,7 +290,7 @@ async function confirmDelete() {
 const { data: factures, pending, refresh: refreshFactures } = await useLazyAsyncData('factures_list',
     async () => {
         const { data, error } = await supabase
-            .from('factures')
+            .from('invoices')
             .select('*, client:client_id(*)')
         if (error) {
             throw error

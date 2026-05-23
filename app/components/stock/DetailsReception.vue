@@ -161,14 +161,10 @@ async function finishReception() {
             isOpen.value = false
         }
     }
-
-
-
-
     finishing.value = false
 }
 
-// 8. Chargement des données — SEMPRE EN DERNIER
+// 8. Chargement des données 
 const { data: lines, pending, refresh } = await useLazyAsyncData(
     `stk_trx_lines-${props.stk_trx_header?.id}`,
     async () => {
