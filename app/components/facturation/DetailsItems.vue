@@ -150,7 +150,6 @@ const columns: TableColumn<STKLine>[] = [
         }])
 ]
 
-// 7. Fonctions utilitaires
 function getRowItems(row: Row<STKLine>): DropdownMenuItem[][] {
     return [[
         {

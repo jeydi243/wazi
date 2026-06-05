@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Lookup, Classe, Organisation, Affectation, Facture, Client } from '~/types'
+import type { Lookup, Classe, Organisation, Affectation, Facture, Client, Article } from '~/types'
 
 export const useParametresStore = defineStore('parametres', () => {
   const supabase = useSupabaseClient()
@@ -7,6 +7,7 @@ export const useParametresStore = defineStore('parametres', () => {
   const lookups = ref<Lookup[]>([])
   const classes = ref<Classe[]>([])
   const clients = ref<Client[]>([])
+  const articles = ref<Article[]>([])
   const organisations = ref<Organisation[]>([])
   const affectations = ref<Affectation[]>([])
   const invoiceHeaders = ref<Facture[]>([])
@@ -27,7 +28,7 @@ export const useParametresStore = defineStore('parametres', () => {
   const getTypeClient = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_clients'))
   const getTypeArticles = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_articles'))
   const getTypeOrganisations = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_organisations'))
-
+  const getGroupeTaxation = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'groupe_taxation'))
 
   const getClasseItems = computed(() => {
     return classes.value.map(classe => ({
@@ -74,6 +75,9 @@ export const useParametresStore = defineStore('parametres', () => {
     const { data: classesData, error: classesError } = await supabase.from('classes').select('*')
     if (classesData) classes.value = classesData as unknown as Classe[]
 
+    const { data: articlesData, error: articlesError } = await supabase.from('articles').select('*')
+    if (articlesData) articles.value = articlesData as unknown as Article[]
+
     const { data: organisationsData, error: organisationsError } = await supabase.from('organisations').select('*, lookup:type_id(id, code, description, classe:classe_id(id, code,description))')
     if (organisationsData) organisations.value = organisationsData as unknown as Organisation[]
 
@@ -118,7 +122,7 @@ export const useParametresStore = defineStore('parametres', () => {
         invoices: invoicesData,
         clients: clientsData
       },
-      error: lookupsError || classesError || organisationsError || clientsError || invoicesError,
+      error: lookupsError || classesError || organisationsError || clientsError || invoicesError || articlesError,
       loading: false
     }
   }
@@ -129,6 +133,7 @@ export const useParametresStore = defineStore('parametres', () => {
     invoiceHeaders,
     organisations,
     affectations,
+    articles,
     getClasseById,
     getClasseItems,
     getLookupsById,
@@ -145,6 +150,7 @@ export const useParametresStore = defineStore('parametres', () => {
     getEmplacements,
     getTypeFactures,
     getTypeArticles,
+    getGroupeTaxation,
     getTypeOrganisations,
     clients
   }

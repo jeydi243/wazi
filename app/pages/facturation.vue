@@ -160,15 +160,16 @@ const columns: TableColumn<Facture>[] = [
         cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.montant_ht)
     },
     {
-        accessorKey: 'montant_ttc',
-        header: 'Montant TTC',
-        cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.montant_ttc)
-    },
-    {
         accessorKey: 'montant_tva',
         header: 'Montant TVA',
         cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.montant_tva)
     },
+    {
+        accessorKey: 'montant_ttc',
+        header: 'Montant TTC',
+        cell: ({ row }) => h('p', { class: 'text-(--ui-text-muted)' }, row.original.montant_ttc)
+    },
+    
 
 
     {

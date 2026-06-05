@@ -19,14 +19,12 @@ const isOpen = computed({
 })
 
 const schema = z.object({
-    numero_lot: z.string().optional(),
     header_id: z.string({ message: 'Veuillez sélectionner un header' }),
     article_id: z.string({ message: 'Veuillez sélectionner un article' }),
     quantite_trx: z.number({ message: 'Quantité invalide' }).min(1, 'Quantité invalide'),
     prix_unitaire: z.number({ message: 'Prix invalide' }).min(1, 'Prix invalide'),
-    in_location_id: z.string({ message: 'Veuillez sélectionner un emplacement de réception' }).optional(),
-    out_location_id: z.string({ message: 'Veuillez sélectionner un emplacement de sortie' }).optional(),
-
+    type_prix: z.enum(['Y', 'N'], { message: 'Type de prix invalide' }),
+    groupe_taxation_id: z.string({ message: 'Groupe de taxation invalide' })
 })
 type Schema = z.output<typeof schema>
 
@@ -36,19 +34,20 @@ const defaultState = {
     quantite_trx: 1,
     prix_unitaire: 1,
     numero_lot: '',
-    in_location_id: undefined,
+    type_prix: undefined,
     out_location_id: undefined,
+    groue_taxation_id: undefined,
 }
 
 const state = reactive<Partial<Schema>>({ ...defaultState })
 
-const { data: articles } = await useLazyAsyncData('articles-select', async () => {
-    const { data } = await supabase.from('articles')
-        .select('*, lookup:lookup_id!inner(*)')
-        .eq('lookup.code', 'ART-PTP')
-    console.log(data)
-    return data || []
-})
+// const { data: articles } = await useLazyAsyncData('articles-select', async () => {
+//     const { data } = await supabase.from('articles')
+//         .select('*, lookup:lookup_id!inner(*)')
+//         .eq('lookup.code', 'ART-PTP')
+//     console.log(data)
+//     return data || []
+// })
 
 // const { data: emplacements } = await useLazyAsyncData('emplacements-select', async () => {
 //     const { data } = await supabase.from('organisations')
@@ -61,6 +60,7 @@ const { data: articles } = await useLazyAsyncData('articles-select', async () =>
 
 const parametres = useParametresStore()
 // const emplacements = computed(() => parametres.getEmplacements(props.header?.in_organisation?.id!))
+const articles = computed(() => parametres.articles)
 
 // console.log("there is emplacements : ", emplacements, " for Organisation  ", props.header?.in_organisation?.nom, ' with ID : ', props.header?.in_organisation?.id)
 const articleItems = computed<SelectMenuItem[]>(() =>
@@ -68,6 +68,10 @@ const articleItems = computed<SelectMenuItem[]>(() =>
         label: art.nom,
         id: art.id
     })) || []
+)
+
+const typePrixItems = computed<SelectMenuItem[]>(() =>
+    [{ "id": 'Y', label: "Modifiable" }, { id: "N", label: "Non modifiable" }]
 )
 // const itemsEmplacements = computed<SelectMenuItem[]>(() =>
 //     emplacements.value?.map((org: Organisation) => ({
@@ -104,10 +108,18 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                     <USelectMenu v-model="state.article_id" virtualize value-key="id" :items="articleItems"
                         class="w-full" placeholder="Rechercher un article..." searchable />
                 </UFormField>
-
-                <UFormField label="Numéro de lot" name="numero_lot">
-                    <UInput v-model="state.numero_lot" class="w-full" placeholder="Entrez le numéro de lot" />
+                <UFormField label="Type Prix" name="type_prix">
+                    <USelectMenu v-model="state.type_prix" value-key="id" :items="typePrixItems"
+                        class="w-full" placeholder="Modifiable ou Non" />
                 </UFormField>
+                <UFormField label="Groupe Taxation" name="groupe_taxation_id">
+                    <USelectMenu v-model="state.groupe_taxation_id" value-key="id" :items="groupTaxationItems"
+                        class="w-full"  />
+                </UFormField>
+
+                <!-- <UFormField label="Numéro de lot" name="numero_lot">
+                    <UInput v-model="state.numero_lot" class="w-full" placeholder="Entrez le numéro de lot" />
+                </UFormField> -->
 
                 <!-- <UFormField label="Emplacement de réception" name="in_location_id">
                     <USelectMenu v-model="state.in_location_id" value-key="id" :items="itemsEmplacements" class="w-full"
@@ -120,12 +132,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
                 </UFormField> -->
 
                 <div class="grid grid-cols-2 gap-4">
-                    <UFormField label="Quantité" name="quantite_trx">
-                        <UInput v-model="state.quantite_trx" type="number" class="w-full" />
-                    </UFormField>
-
                     <UFormField label="Prix Unitaire" name="prix_unitaire">
                         <UInput v-model="state.prix_unitaire" type="number" step="0.01" class="w-full" />
+                    </UFormField>
+
+                    <UFormField label="Quantité" name="quantite_trx">
+                        <UInput v-model="state.quantite_trx" type="number" class="w-full" />
                     </UFormField>
                 </div>
 
