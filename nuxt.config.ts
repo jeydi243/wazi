@@ -37,6 +37,13 @@ export default defineNuxtConfig({
     }
   },
   supabase: {
+    clientOptions: {
+      auth: {
+        experimental: {
+          passkey: true // Active le support des passkeys
+        }
+      }
+    },
     redirectOptions: {
       login: "/auth",
       callback: "/confirm",

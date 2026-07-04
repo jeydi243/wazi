@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import * as z from 'zod'
-import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
+import type { FormErrorEvent, FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import type { Article, Facture, Organisation } from '~/types'
 
 const props = defineProps<{
     open: boolean
-    header: Facture | null
+    header: Facture | null | string
 }>()
 const emit = defineEmits(['update:open', 'line-added'])
 const form = useTemplateRef('form')
@@ -29,7 +29,7 @@ const schema = z.object({
 type Schema = z.output<typeof schema>
 
 const defaultState = {
-    header_id: props.header?.id,
+    header_id: (props.header as Facture)?.id ?? (props.header as string),
     article_id: undefined,
     quantite_trx: 1,
     prix_unitaire: 1,
@@ -40,23 +40,6 @@ const defaultState = {
 }
 
 const state = reactive<Partial<Schema>>({ ...defaultState })
-
-// const { data: articles } = await useLazyAsyncData('articles-select', async () => {
-//     const { data } = await supabase.from('articles')
-//         .select('*, lookup:lookup_id!inner(*)')
-//         .eq('lookup.code', 'ART-PTP')
-//     console.log(data)
-//     return data || []
-// })
-
-// const { data: emplacements } = await useLazyAsyncData('emplacements-select', async () => {
-//     const { data } = await supabase.from('organisations')
-//         .select('id, nom, lookup:lookup_id!inner(*)')
-//         .eq('lookup.description', 'Emplacement')
-//         .eq('organisation_parent_id', props.header?.in_organisation?.id!)
-//     console.log(data)
-//     return data || []
-// })
 
 const parametres = useParametresStore()
 // const emplacements = computed(() => parametres.getEmplacements(props.header?.in_organisation?.id!))
@@ -73,13 +56,17 @@ const articleItems = computed<SelectMenuItem[]>(() =>
 const typePrixItems = computed<SelectMenuItem[]>(() =>
     [{ "id": 'Y', label: "Modifiable" }, { id: "N", label: "Non modifiable" }]
 )
-// const itemsEmplacements = computed<SelectMenuItem[]>(() =>
-//     emplacements.value?.map((org: Organisation) => ({
-//         label: org.nom,
-//         id: org.id
-//     })) || []
-// )
+const groupTaxationItems = computed<SelectMenuItem[]>(() =>
+    parametres.getGroupeTaxation.map((groupe: any) => ({
+        label: groupe.nom,
+        id: groupe.id
+    }))
+)
 
+async function onError(error: FormErrorEvent) {
+    console.log("error", error)
+    toast.add({ title: 'Erreur', description: error.errors[0]?.message, color: 'error' })
+}
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     const { data, error } = await supabase
         .from('stk_trx_lines')
@@ -103,18 +90,18 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
 <template>
     <UModal v-model:open="isOpen" title="Ajouter une ligne" description="Sélectionner l'article et définir la quantité">
         <template #body>
-            <UForm ref="form" :schema="schema" :state="state" class="space-y-4" @submit="onSubmit">
+            <UForm ref="form" :schema="schema" :state="state" class="space-y-4" @submit="onSubmit" @error="onError">
                 <UFormField label="Article" name="article_id">
                     <USelectMenu v-model="state.article_id" virtualize value-key="id" :items="articleItems"
                         class="w-full" placeholder="Rechercher un article..." searchable />
                 </UFormField>
                 <UFormField label="Type Prix" name="type_prix">
-                    <USelectMenu v-model="state.type_prix" value-key="id" :items="typePrixItems"
-                        class="w-full" placeholder="Modifiable ou Non" />
+                    <USelectMenu v-model="state.type_prix" value-key="id" :items="typePrixItems" class="w-full"
+                        placeholder="Modifiable ou Non" />
                 </UFormField>
                 <UFormField label="Groupe Taxation" name="groupe_taxation_id">
                     <USelectMenu v-model="state.groupe_taxation_id" value-key="id" :items="groupTaxationItems"
-                        class="w-full"  />
+                        class="w-full" />
                 </UFormField>
 
                 <!-- <UFormField label="Numéro de lot" name="numero_lot">

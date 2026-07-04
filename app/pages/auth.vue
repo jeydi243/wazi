@@ -1,6 +1,6 @@
 <template>
     <div class="flex flex-col items-center justify-center gap-4 p-4 min-h-screen">
-        <UPageCard class="w-full max-w-md">
+        <UPageCard class="w-full max-w-md " variant="outline">
             <UAuthForm :schema="schema" title="Login" description="Enter your credentials to access your account."
                 icon="i-lucide-user" :fields="fields" :providers="providers" @submit="onSubmit" />
         </UPageCard>
@@ -34,6 +34,26 @@ const fields: AuthFormField[] = [{
     required: true
 }]
 const providers = [{
+    label: 'Passkey',
+    icon: 'i-lucide-fingerprint',
+    color: 'white' as const,
+    onClick: async () => {
+        try {
+            const { data, error } = await supabase.auth.signInWithPasskey()
+            if (error) {
+                toast.add({ title: 'Erreur', description: error.message, color: 'error' })
+                return
+            }
+            if (data?.user) {
+                user = useSupabaseUser()
+                await router.push('/')
+                toast.add({ title: 'Connexion réussie', description: 'Bienvenue via Passkey !', color: 'success' })
+            }
+        } catch (err: any) {
+            toast.add({ title: 'Erreur', description: err.message, color: 'error' })
+        }
+    }
+}, {
     label: 'Google',
     icon: 'i-simple-icons-google',
     onClick: () => {
@@ -77,6 +97,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         if (data.user) {
             // Mettre à jour l'utilisateur
             user = useSupabaseUser()
+            await router.push('/')
 
             toast.add({
                 title: 'Connexion réussie',
@@ -85,7 +106,6 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             })
 
             // Rediriger vers la page d'accueil après connexion
-            await router.push('/')
         }
     } catch (error) {
         console.error('Erreur lors de la connexion:', error)

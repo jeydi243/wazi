@@ -141,6 +141,7 @@ const columns: TableColumn<Facture>[] = [
             icon: 'solar:pen-line-duotone',
             onClick: () => {
                 selectedFacture.value = row.original
+                console.log("selectedFacture", selectedFacture.value)
                 openSlideOver.value = true
             }
         })

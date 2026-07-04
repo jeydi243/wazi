@@ -29,6 +29,26 @@ const validate = (state: Partial<PasswordSchema>): FormError[] => {
     }
     return errors
 }
+
+const supabase = useSupabaseClient()
+const toast = useToast()
+const registerPasskeyLoading = ref(false)
+
+async function registerPasskey() {
+    registerPasskeyLoading.value = true
+    try {
+        const { data, error } = await supabase.auth.registerPasskey()
+        if (error) {
+            toast.add({ title: 'Erreur', description: error.message, color: 'error' })
+        } else {
+            toast.add({ title: 'Succès', description: 'Passkey enregistré avec succès.', color: 'success' })
+        }
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
+    } finally {
+        registerPasskeyLoading.value = false
+    }
+}
 </script>
 
 <template>
@@ -45,6 +65,12 @@ const validate = (state: Partial<PasswordSchema>): FormError[] => {
 
                 <UButton label="Update" class="w-fit" type="submit" />
             </UForm>
+        </UPageCard>
+
+        <UPageCard title="Passkeys" description="Ajoutez un Passkey pour vous connecter rapidement avec Face ID, Touch ID ou Windows Hello sans utiliser de mot de passe." variant="subtle" class="mt-8">
+            <template #footer>
+                <UButton label="Enregistrer un Passkey" icon="i-lucide-fingerprint" color="primary" variant="solid" :loading="registerPasskeyLoading" @click="registerPasskey" />
+            </template>
         </UPageCard>
 
         <UPageCard title="Account"

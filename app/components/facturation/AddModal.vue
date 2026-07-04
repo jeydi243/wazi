@@ -39,7 +39,7 @@
             
             <USeparator class="my-5" />
 
-            <FacturationDetailsItems :invoiceHeader="state" />
+            <FacturationDetailsItems v-if="state.id" :invoiceHeader="state" />
         </template>
 
         <template #footer>
@@ -96,18 +96,8 @@ const isOpen = computed({
 })
 
 type Schema = z.output<typeof schema>
-const state = reactive<Partial<Schema>>(props.header ? {
-    id: props.header.id,
-    client_id: props.header.client.id,
-    invoice_type_id: props.header.invoice_type.id,
-    mode_paiement_id: props.header.mode_paiement.id,
-    numero_facture: props.header.numero_facture,
-    date_facture: props.header.date_facture ? new Date(props.header.date_facture) : undefined,
-    condition_paiement_id: (props.header as any).condition_paiement_id,
-    devise: (props.header as any).devise,
-    invoice_parent_id: (props.header as any).invoice_parent_id,
-    type_avoir: (props.header as any).type_avoir
-} : {
+const state = reactive<Partial<Schema>>({
+    id: undefined,
     client_id: undefined,
     invoice_type_id: undefined,
     mode_paiement_id: undefined,
@@ -115,8 +105,35 @@ const state = reactive<Partial<Schema>>(props.header ? {
     devise: undefined,
     date_facture: undefined,
     numero_facture: undefined,
-    invoice_parent_id: undefined
+    invoice_parent_id: undefined,
+    type_avoir: undefined
 })
+
+watch(() => props.header, (newHeader) => {
+    if (newHeader) {
+        state.id = newHeader.id
+        state.client_id = newHeader.client?.id
+        state.invoice_type_id = newHeader.invoice_type?.id
+        state.mode_paiement_id = newHeader.mode_paiement?.id
+        state.numero_facture = newHeader.numero_facture
+        state.date_facture = newHeader.date_facture ? new Date(newHeader.date_facture) : undefined
+        state.condition_paiement_id = (newHeader as any).condition_paiement_id
+        state.devise = (newHeader as any).devise
+        state.invoice_parent_id = (newHeader as any).invoice_parent_id
+        state.type_avoir = (newHeader as any).type_avoir
+    } else {
+        state.id = undefined
+        state.client_id = undefined
+        state.invoice_type_id = undefined
+        state.mode_paiement_id = undefined
+        state.numero_facture = undefined
+        state.date_facture = undefined
+        state.condition_paiement_id = undefined
+        state.devise = undefined
+        state.invoice_parent_id = undefined
+        state.type_avoir = undefined
+    }
+}, { immediate: true })
 const toCalendarDate = (date: Date) => {
     return new CalendarDate(
         date.getFullYear(),

@@ -19,6 +19,11 @@ const items = [
         label: 'Utilisateurs affectés',
         icon: 'i-lucide-user',
         slot: 'users'
+    },
+    {
+        label: 'Tokens',
+        icon: 'i-lucide-user',
+        slot: 'tokens'
     }
 ]
 
@@ -103,10 +108,34 @@ const columns: TableColumn<Organisation>[] = [
         }))
     }
 ]
+
+const { data: tokens, pending: pendingTokens, refresh: refreshTokens } = await useAsyncData<any[]>(
+    () => `tokens-${props.organisation?.id}`,
+    async () => {
+        if (!props.organisation?.id) return []
+        const { data, error } = await supabase
+            .from('organisation_tokens')
+            .select('*')
+            .eq('organisation_id', props.organisation.id)
+        if (error) {
+            toast.add({ title: 'Erreur', description: error.message, color: 'error' })
+            return []
+        }
+        return data || []
+    },
+    { watch: [() => props.organisation?.id, () => isOpen.value], immediate: true }
+)
+
+const tokenColumns: TableColumn<any>[] = [
+    { accessorKey: 'nom', header: 'Nom' },
+    { accessorKey: 'valeur', header: 'Valeur', cell: () => h('span', '••••••••') },
+    { accessorKey: 'date_debut', header: 'Date début', cell: ({ row }) => h('span', row.original.date_debut || '-') },
+    { accessorKey: 'date_expiration', header: 'Date expiration', cell: ({ row }) => h('span', row.original.date_expiration || '-') }
+]
 </script>
 
 <template>
-    <USlideover v-model:open="isOpen" title="Détails de l'organisation" :ui="{ content: 'max-w-2xl' }">
+    <USlideover v-model:open="isOpen" title="Détails de l'organisation" :ui="{ content: 'max-w-4xl' }">
         <template #content>
             <div class="p-4 flex flex-col h-full gap-4">
                 <div>
@@ -175,6 +204,29 @@ const columns: TableColumn<Organisation>[] = [
                                         <div
                                             class="flex flex-col items-center justify-center py-6 text-(--ui-text-muted) text-sm">
                                             <p>Aucun service trouvé pour cette organisation.</p>
+                                        </div>
+                                    </template>
+                                </UTable>
+                            </div>
+                        </template>
+
+                        <template #tokens>
+                            <div class="pt-4 h-full space-y-4 flex flex-col">
+                                <div class="flex justify-end">
+                                    <PointFacturationAddTokenModal v-if="props.organisation" :organisation="props.organisation" @token-added="refreshTokens" />
+                                </div>
+                                <UTable :data="tokens || []" :columns="tokenColumns" :loading="pendingTokens"
+                                        class="border border-(--ui-border) rounded-md overflow-hidden flex-1" :ui="{
+                                            base: 'table-fixed border-separate border-spacing-0 border border-(--ui-border) rounded-t-lg',
+                                            thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
+                                            tbody: '[&>tr]:last:[&>td]:border-b-0',
+                                            th: 'py-1 first:rounded-tl-[calc(var(--ui-radius)*2)] last:rounded-tr-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r',
+                                            td: 'border-b border-(--ui-border) p-2'
+                                        }">
+                                    <template #empty-state>
+                                        <div
+                                            class="flex flex-col items-center justify-center py-6 text-(--ui-text-muted) text-sm">
+                                            <p>Aucun token trouvé pour cette organisation.</p>
                                         </div>
                                     </template>
                                 </UTable>

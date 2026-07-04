@@ -57,6 +57,7 @@
     </UDashboardPanel>
 
     <PointFacturationDetails v-model:open="openSlideOver" :organisation="selectedOrganisation" />
+    <PointFacturationEditModal v-model:open="openEditModal" :organisation="selectedOrganisationToEdit" @point-facturation-updated="refreshOrganisations" />
 </template>
 
 <script setup lang="ts">
@@ -104,6 +105,8 @@ const columnDisplayItems = buildColumnDisplayItems(['select', 'details', 'code',
 
 const openSlideOver = ref(false)
 const selectedOrganisation = ref<Organisation | null>(null)
+const openEditModal = ref(false)
+const selectedOrganisationToEdit = ref<Organisation | null>(null)
 
 const { copy } = useClipboard()
 const searchInput = ref('')
@@ -247,6 +250,14 @@ function getRowItems(row: Row<Organisation>): DropdownMenuItem[][] {
             onSelect() {
                 selectedOrganisation.value = row.original
                 openSlideOver.value = true
+            }
+        },
+        {
+            label: 'Modifier',
+            icon: 'i-lucide-pencil',
+            onSelect() {
+                selectedOrganisationToEdit.value = row.original
+                openEditModal.value = true
             }
         },
         { type: 'separator' as const },

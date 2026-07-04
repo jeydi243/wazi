@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+import { h } from 'vue'
 import type { Row } from '@tanstack/table-core'
 import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import type { Article, Facture, STKHeader, STKLine } from '~/types'
@@ -61,9 +62,7 @@ const isOpen = computed({
     set: (value) => emit('update:open', value)
 })
 
-// 3. resolveComponent() — obligatoire avant tout usage dans h()
-const UButton = resolveComponent('UButton')
-const UDropdownMenu = resolveComponent('UDropdownMenu')
+import { UButton, UDropdownMenu } from '#components'
 
 // 4. Refs d'état UI
 const openAddModal = ref(false)
@@ -89,7 +88,7 @@ const {
 } = useDataTable({ pageSize: 5 })
 
 // 6. Définition des colonnes
-const columns: TableColumn<STKLine>[] = [
+const columns = computed<TableColumn<STKLine>[]>(() => [
     {
         accessorKey: 'article_nom',
         header: () => h('div', { class: 'w-[250px]' }, 'Article'),
@@ -143,12 +142,12 @@ const columns: TableColumn<STKLine>[] = [
             id: 'actions',
             header: () => h('div', { class: 'text-center w-[80px]' }, 'Actions'),
             cell: ({ row }: { row: Row<STKLine> }) => h('div', { class: 'text-center' },
-                h(UDropdownMenu, { content: { align: 'end' }, items: getRowItems(row) },
-                    () => h(UButton, { icon: 'i-lucide-ellipsis-vertical', color: 'neutral', variant: 'ghost' })
-                )
+                h(UDropdownMenu, { content: { align: 'end' }, items: getRowItems(row) }, {
+                    default: () => h(UButton, { icon: 'i-lucide-ellipsis-vertical', color: 'neutral', variant: 'ghost' })
+                })
             )
         }])
-]
+])
 
 function getRowItems(row: Row<STKLine>): DropdownMenuItem[][] {
     return [[
@@ -161,7 +160,7 @@ function getRowItems(row: Row<STKLine>): DropdownMenuItem[][] {
             icon: 'i-lucide-trash',
             color: 'error' as const,
             async onSelect() {
-                const { error } = await supabase.from('stk_trx_lines').delete().eq('id', (row.original as any).id)
+                const { error } = await supabase.from('invoices_lines').delete().eq('id', (row.original as any).id)
                 if (error) {
                     toast.add({ title: 'Erreur', description: error.message, color: 'error' })
                 } else {
@@ -201,8 +200,8 @@ async function finishReception() {
 }
 
 // 8. Chargement des données — SEMPRE EN DERNIER
-const { data: lines, pending, refresh } = await useLazyAsyncData(
-    `invoices_lines-${props.invoiceHeader?.id}`,
+const { data: lines, pending, refresh } = useLazyAsyncData(
+    `invoices_lines_${props.invoiceHeader?.id}`,
     async () => {
         if (!props.invoiceHeader?.id) return []
         const { data, error } = await supabase
