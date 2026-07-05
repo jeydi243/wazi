@@ -3,7 +3,7 @@
 
 @layer base {
   :root {
-    --ui-bg: #f8fafc; /* Un blanc cassé/gris très léger pour réduire l'éblouissement */
+    --ui-bg: #f7f7f7; /* Un blanc cassé/gris très léger pour réduire l'éblouissement */
   }
 
   .dark {
@@ -47,4 +47,17 @@
 .layout-leave-to {
   opacity: 0;
   transform: translateX(-10px);
+}
+
+/* Pattern image on modal/slideover headers — light theme only */
+:root:not(.dark) [data-slot="header"] {
+  background-image: url('/assets/img/pattern.jpg');
+  background-size: cover;
+  background-position: center top;
+}
+
+thead [data-slot="header"] {
+  background-image: url('/assets/img/pattern.jpg');
+  background-size: cover;
+  background-position: center top;
 }

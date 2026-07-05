@@ -1,24 +1,25 @@
 <template>
     <USlideover v-model:open="isOpenSlideOver" description="Details du tarifaire" inset
-                :title="`${props.tarifaire?.code}`" :ui="{ content: 'max-w-3xl' }">
+        :title="`${props.tarifaire?.code}`" :ui="{ content: 'max-w-3xl' }">
         <template #body>
             <div class="flex flex-row justify-between">
-                <UButton icon="iconoir:refresh-double" color="primary" variant="ghost" @click="refreshTarifairesLines" />
+                <UButton icon="iconoir:refresh-double" color="primary" variant="ghost"
+                    @click="refreshTarifairesLines" />
                 <TarifairesAddArticle :tarifaire_id="props.tarifaire?.id" @tarifaire-added="refreshTarifairesLines" />
             </div>
             <div>
                 <UTable ref="table_tarifaires_lines" v-model:column-filters="columnFilters"
-                        v-model:column-visibility="columnVisibility" v-model:row-selection="rowSelection"
-                        v-model:pagination="pagination" empty="Aucune ligne de tarifaire" :pagination-options="{
-                            getPaginationRowModel: getPaginationRowModel()
-                        }" class="shrink-0 m-2" :data="tarifairesLines || []" :columns="columnsTarifaireLine"
-                        :loading="tarifairesLinesStatus === 'pending'" :ui="{
-                            base: 'table-fixed border-separate border-spacing-0',
-                            thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
-                            tbody: '[&>tr]:last:[&>td]:border-b-0',
-                            th: 'py-1 first:rounded-tl-[calc(var(--ui-radius)*2)] last:rounded-tr-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r',
-                            td: 'border-b border-(--ui-border) p-2'
-                        }" />
+                    v-model:column-visibility="columnVisibility" v-model:row-selection="rowSelection"
+                    v-model:pagination="pagination" empty="Aucune ligne de tarifaire" :pagination-options="{
+                        getPaginationRowModel: getPaginationRowModel()
+                    }" class="shrink-0 m-2 bg-white dark:bg-(--ui-bg)" :data="tarifairesLines || []"
+                    :columns="columnsTarifaireLine" :loading="tarifairesLinesStatus === 'pending'" :ui="{
+                        base: 'table-fixed border-separate border-spacing-0',
+                        thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
+                        tbody: '[&>tr]:last:[&>td]:border-b-0',
+                        th: 'py-1 first:rounded-tl-[calc(var(--ui-radius)*2)] last:rounded-tr-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r',
+                        td: 'border-b border-(--ui-border) p-2'
+                    }" />
             </div>
             <UModal v-model:open="isStopModalOpen" title="Confirmer l'arrêt de l'tarifaire">
                 <template #body>

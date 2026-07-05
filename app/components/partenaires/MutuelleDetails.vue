@@ -1,7 +1,7 @@
 <template>
-    <USlideover v-model:open="openDetailsPatient" side="right" inset
-                title="Details de la mutuelle"
-                :description="`${props.mutuelle?.nom} ${props.mutuelle?.postnom} ${props.mutuelle?.prenom}`" :ui="{ content: 'max-w-[70vw]' }">
+    <USlideover v-model:open="openDetailsPatient" side="right" inset title="Details de la mutuelle"
+        :description="`${props.mutuelle?.nom} ${props.mutuelle?.postnom} ${props.mutuelle?.prenom}`"
+        :ui="{ content: 'max-w-[70vw]' }">
         <template #body>
             <pre>{{ mutuelle }}</pre>
             <UTabs color="primary" variant="link" :items="items" class="w-full" :ui="{ list: 'mb-2' }">
@@ -9,19 +9,20 @@
                     <div v-if="item.value == 'mutuelle'">
                         <div class="flex flex-row justify-end">
                             <UButton label="Attacher une mutuelle" icon="i-lucide-plus" color="primary"
-                                     variant="solid" />
+                                variant="solid" />
                         </div>
                         <UTable ref="table-mutuelle" v-model:column-filters="columnFilters"
-                                v-model:column-visibility="columnVisibility" v-model:row-selection="rowSelection"
-                                v-model:pagination="pagination" :pagination-options="paginationOptions" class="shrink-0 m-2"
-                                :data="MutuellesPatient" :columns="columns" empty="Aucune mutuelle attaché à ce mutuelle"
-                                :ui="{
-                                    base: 'table-fixed border-separate border-spacing-0 border border-(--ui-border) rounded-t-lg',
-                                    thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
-                                    tbody: '[&>tr]:last:[&>td]:border-b-0',
-                                    th: 'py-1 first:rounded-tl-[calc(var(--ui-radius)*2)] last:rounded-tr-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r',
-                                    td: 'border-b border-(--ui-border) '
-                                }" />
+                            v-model:column-visibility="columnVisibility" v-model:row-selection="rowSelection"
+                            v-model:pagination="pagination" :pagination-options="paginationOptions"
+                            class=" shrink-0 m-2 bg-white dark:bg-(--ui-bg) bg-white dark:bg-(--ui-bg) bg-white dark:bg-(--ui-bg) bg-white dark:bg-(--ui-bg)"
+                            :data="MutuellesPatient" :columns="columns" empty="Aucune mutuelle attaché à ce mutuelle"
+                            :ui="{
+                                base: 'table-fixed border-separate border-spacing-0 border border-(--ui-border) rounded-t-lg',
+                                thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
+                                tbody: '[&>tr]:last:[&>td]:border-b-0',
+                                th: 'py-1 first:rounded-tl-[calc(var(--ui-radius)*2)] last:rounded-tr-[calc(var(--ui-radius)*2)] border-y border-(--ui-border) first:border-l last:border-r',
+                                td: 'border-b border-(--ui-border) '
+                            }" />
                     </div>
                 </template>
             </UTabs>

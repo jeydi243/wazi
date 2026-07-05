@@ -5,7 +5,7 @@ useHead({
         { name: 'description', content: 'Manage your settings.' }
     ]
 })
-const links = [[{
+const links = [{
     label: 'Parametres',
     icon: 'i-lucide-user',
     to: '/settings',
@@ -45,7 +45,7 @@ const links = [[{
     label: 'Security',
     icon: 'i-lucide-shield',
     to: '/settings/security'
-}]]
+}]
 </script>
 
 <template>

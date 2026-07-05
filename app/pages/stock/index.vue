@@ -1,5 +1,5 @@
 <template>
-  <UDashboardPanel id="stock-view" :ui-pro="{ body: 'p-6', header: 'p-0' }">
+  <UDashboardPanel id="stock-view" :ui-pro="{ body: 'p-6 bg-(--ui-bg-elevated)/50', header: 'p-0' }">
     <template #header>
       <UDashboardNavbar title="Stock" :ui-pro="{ root: 'py-1' }">
         <template #left>
@@ -567,9 +567,10 @@ const { data: stock, pending, refresh: refreshStock } = await useLazyAsyncData('
       .from('stk_data')
       .select('*, article:article_id(*), organisation:organisation_id(*), location:location_id(*)')
     if (error) {
-      throw error
+      console.error('Erreur chargement stock:', error)
+      return []
     }
-    return data as Stock[]
+    return (data as Stock[]) || []
   })
 
 // Écouter les changements en temps réel

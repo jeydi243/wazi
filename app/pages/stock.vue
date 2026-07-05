@@ -5,7 +5,7 @@ useHead({
         { name: 'description', content: 'Manage your stock.' }
     ]
 })
-const links = [[{
+const links = [{
     label: 'Stock',
     icon: 'i-lucide-user',
     to: '/stock',
@@ -26,8 +26,7 @@ const links = [[{
     icon: 'octicon:organization-16',
     to: '/stock/reception-interne'
 }
-
-]]
+]
 </script>
 
 <template>

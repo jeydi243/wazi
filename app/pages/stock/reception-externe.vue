@@ -298,9 +298,10 @@ const { data: stk_trx_headers, pending, refresh: refreshSTKHeaders } = await use
             .select('*, in_organisation:in_organisation_id(*), out_organisation:out_organisation_id(*), fournisseur:fournisseurs(*)')
         console.log('Données retournés ', { data })
         if (error) {
-            throw error
+            console.error('Erreur chargement réceptions:', error)
+            return []
         }
-        return data as STKHeader[]
+        return (data as STKHeader[]) || []
     })
 
 // Écouter les changements en temps réel

@@ -31,9 +31,13 @@ const state = reactive<Partial<Schema>>({
     lookup_id: undefined,
     organisation_parent_id: undefined
 })
-const { data: lookups } = await useAsyncData(`lookups-emplacement-${props.parent?.id}`, async () => {
-    const { data } = await supabase.from('lookups').select('id, nom, description').eq('description', 'Emplacement')
-    return data
+const { data: lookups } = await useLazyAsyncData(`lookups-emplacement-${props.parent?.id}`, async () => {
+    const { data, error } = await supabase.from('lookups').select('id, nom, description').eq('description', 'Emplacement')
+    if (error) {
+        console.error('Erreur chargement lookups emplacement:', error)
+        return []
+    }
+    return data || []
 })
 
 

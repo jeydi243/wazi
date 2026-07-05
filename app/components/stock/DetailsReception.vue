@@ -5,7 +5,7 @@ import type { Article, STKHeader, STKLine } from '~/types'
 
 const props = defineProps({
     open: { type: Boolean, required: true },
-    stk_trx_header: { type: Object as PropType<STKHeader | null>, required: true }
+    stk_trx_header: { type: Object as PropType<STKHeader | null>, default: null }
 })
 const emit = defineEmits(['update:open', 'reception-finished'])
 
