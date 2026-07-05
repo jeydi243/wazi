@@ -2,7 +2,7 @@
     <div class="bg-(--ui-bg-elevated)/50">
         <UDashboardPanel id="inbox-70" :ui-pro="{ body: 'p-0' }">
             <template #header>
-                <UDashboardNavbar title="Users">
+                <UDashboardNavbar title="Roles">
                     <template #leading>
                         <!-- <UDashboardSidebarCollapse /> -->
                     </template>
@@ -52,7 +52,7 @@
                                 </UDropdownMenu>
                             </div>
                         </div>
-                        <UsersAddModal />
+                        <RolesAddModal />
                     </template>
                 </UDashboardNavbar>
             </template>
@@ -60,7 +60,7 @@
                 <UTable ref="table" v-model:column-filters="columnFilters" v-model:column-visibility="columnVisibility"
                     v-model:row-selection="rowSelection" v-model:pagination="pagination" :pagination-options="{
                         getPaginationRowModel: getPaginationRowModel()
-                    }" class="shrink-0 m-2 bg-white dark:bg-(--ui-bg)" :data="Users || []" :columns="columns" :loading="status === 'pending'" :ui="{
+                    }" class="shrink-0 m-2 bg-white dark:bg-(--ui-bg)" :data="Roles || []" :columns="columns" :loading="status === 'pending'" :ui="{
                         base: 'table-fixed border-separate border-spacing-0 border border-(--ui-border) rounded-t-lg',
                         thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
                         tbody: '[&>tr]:last:[&>td]:border-b-0',
@@ -84,7 +84,7 @@
             </template>
         </UDashboardPanel>
 
-        <UsersDetails v-model:open="openDetailsUser" :user="selectedUser" />
+        <RolesDetails v-model:open="openDetailsRole" :role="selectedRole" />
     </div>
 </template>
 <script setup lang="ts">
@@ -92,12 +92,12 @@ import type { TableColumn } from '@nuxt/ui'
 import { upperFirst } from 'scule'
 import * as z from 'zod'
 import { getPaginationRowModel, type Row } from '@tanstack/table-core'
-import type { Profil } from '~/types'
+import type { Profil, Role } from '~/types'
 
 useHead({
-    title: 'Users - Settings',
+    title: 'Roles - Settings',
     meta: [
-        { name: 'description', content: 'Manage users.' }
+        { name: 'description', content: 'Manage Roles.' }
     ]
 })
 
@@ -113,8 +113,8 @@ const columnFilters = ref([{
 const UButton = resolveComponent('UButton')
 const UDropdownMenu = resolveComponent('UDropdownMenu')
 const columnVisibility = ref()
-const openDetailsUser = ref(false)
-const selectedUser = ref<Profil | null>(null)
+const openDetailsRole = ref(false)
+const selectedRole = ref<Role | null>(null)
 const rowSelection = ref({ 2: true })
 const toast = useToast()
 const pagination = ref({
@@ -132,7 +132,7 @@ const debouncedSearch = useDebounceFn((val: string) => {
 watch(searchInput, (val) => {
     debouncedSearch(val)
 })
-const columns: TableColumn<Profil>[] = [
+const columns: TableColumn<Role>[] = [
     {
         id: 'details',
         header: 'Details',
@@ -141,32 +141,32 @@ const columns: TableColumn<Profil>[] = [
             variant: 'ghost',
             icon: 'i-lucide-eye',
             onClick: () => {
-                selectedUser.value = row.original;
-                openDetailsUser.value = !openDetailsUser.value;
-                // console.log(row.original, openDetailsUser.value)
+                selectedRole.value = row.original;
+                openDetailsRole.value = !openDetailsRole.value;
+                // console.log(row.original, openDetailsRole.value)
             }
         }),
     },
     {
-        accessorKey: 'email',
-        header: 'Email',
+        accessorKey: 'nom',
+        header: 'Nom',
         cell: ({ row }) => {
             return h('div', { class: 'flex items-center gap-3' }, [
 
                 h('div', undefined, [
-                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.email),
+                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.nom),
                 ])
             ])
         }
     },
     {
-        accessorKey: 'prenom',
-        header: 'Prenom',
+        accessorKey: 'description',
+        header: 'Description',
         cell: ({ row }) => {
             return h('div', { class: 'flex items-center gap-3' }, [
 
                 h('div', undefined, [
-                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.prenom),
+                    h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.description),
                 ])
             ])
         }
@@ -211,7 +211,7 @@ const columns: TableColumn<Profil>[] = [
     }
 ]
 
-function getRowItems(row: Row<Profil>) {
+function getRowItems(row: Row<Role>) {
     return [
         {
             type: 'label',
@@ -235,7 +235,7 @@ function getRowItems(row: Row<Profil>) {
             label: 'Details',
             icon: 'material-symbols:open-in-full-rounded',
             onSelect() {
-                openDetailsUser.value = !openDetailsUser.value
+                openDetailsRole.value = !openDetailsRole.value
             }
         },
         {
@@ -260,6 +260,6 @@ function getRowItems(row: Row<Profil>) {
 }
 
 
-const { data: Users, error } = await supabase.from('profils').select()
+const { data: Roles, error } = await supabase.from('roles').select()
 
 </script>

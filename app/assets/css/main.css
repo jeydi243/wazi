@@ -55,9 +55,3 @@
   background-size: cover;
   background-position: center top;
 }
-
-thead [data-slot="header"] {
-  background-image: url('/assets/img/pattern.jpg');
-  background-size: cover;
-  background-position: center top;
-}

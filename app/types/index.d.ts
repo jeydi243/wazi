@@ -231,6 +231,7 @@ export interface UserRole {
     id: string
     user: Profil
     role: Role
+    organisation: Organisation
     created_at: string
     date_debut: string
     date_fin: string

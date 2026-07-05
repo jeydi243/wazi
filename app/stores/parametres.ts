@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import type { Lookup, Classe, Organisation, Affectation, Facture, Client, Article } from '~/types'
+import type { Lookup, Classe, Organisation, Affectation, Facture, Client, Article, Profil } from '~/types'
 
 export const useParametresStore = defineStore('parametres', () => {
   const supabase = useSupabaseClient()
@@ -8,10 +8,12 @@ export const useParametresStore = defineStore('parametres', () => {
   const classes = ref<Classe[]>([])
   const clients = ref<Client[]>([])
   const articles = ref<Article[]>([])
+  const profils = ref<Profil[]>([])
   const organisations = ref<Organisation[]>([])
   const affectations = ref<Affectation[]>([])
   const invoiceHeaders = ref<Facture[]>([])
   let channels: any = null
+  const owner_id = ref<string | undefined>(undefined)
 
   const getClasseById = computed(() => (id: string) => {
     return classes.value.find(classe => classe.id === id)?.nom
@@ -69,8 +71,13 @@ export const useParametresStore = defineStore('parametres', () => {
   }
 
   async function init() {
+    
+
     const { data: lookupsData, error: lookupsError } = await supabase.from('lookups').select('*, classe:classe_id(id, code, table_name, description)')
     if (lookupsData) lookups.value = lookupsData as unknown as Lookup[]
+
+    const { data: profilsData, error: profilsError } = await supabase.from('profils').select('*').eq('owner_id', owner_id );
+    if (profilsData) profils.value = profilsData as unknown as Profil[]
 
     const { data: classesData, error: classesError } = await supabase.from('classes').select('*')
     if (classesData) classes.value = classesData as unknown as Classe[]
@@ -132,6 +139,8 @@ export const useParametresStore = defineStore('parametres', () => {
     classes,
     invoiceHeaders,
     organisations,
+    profils,
+    owner_id,
     affectations,
     articles,
     getClasseById,

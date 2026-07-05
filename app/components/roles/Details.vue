@@ -1,6 +1,79 @@
+<template>
+    <UModal v-model:open="open" title="Détails & Affectations" :description="props.role?.nom || 'Article'" :ui="{
+        wrapper: 'w-[700px]'
+    }">
+        <template #body>
+            <div v-if="props.role" class="space-y-6">
+                <!-- Détails de l'article -->
+                <div
+                    class="grid grid-cols-2 gap-4 text-sm p-4 bg-(--ui-bg-elevated) rounded-lg border border-(--ui-border)">
+                    <div>
+                        <p class="text-(--ui-text-muted) mb-1">Nom</p>
+                        <p class="font-medium text-(--ui-text-highlighted)">{{ props.role.nom }}</p>
+                    </div>
+                    <div>
+                        <p class="text-(--ui-text-muted) mb-1">Code</p>
+                        <p class="font-mono text-(--ui-text-highlighted)">{{ props.role.code }}</p>
+                    </div>
+                    <div class="col-span-2">
+                        <p class="text-(--ui-text-muted) mb-1">Description</p>
+                        <p>{{ props.role.description }}</p>
+                    </div>
+                    <div v-if="props.role.entite" class="col-span-2">
+                        <p class="text-(--ui-text-muted) mb-1">Entité</p>
+                        <p class="font-medium text-(--ui-text-highlighted)">
+                            {{ (props.role.entite as any)?.nom }}
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Affectations -->
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-semibold uppercase tracking-wider text-(--ui-text-muted)">
+                            Utilisateurs ayant le role {{ props.role.nom }}
+                        </h3>
+                    </div>
+
+                    <!-- Formulaire d'ajout d'affectation -->
+                    <div class="flex items-end gap-2">
+                        <div class="flex-1">
+                            <UFormField label="Affecter à un utilisateur" name="organisation">
+                                <USelectMenu v-model="selectedOrgId" value-key="id" :items="orgItems"
+                                             placeholder="Choisir un utilisateur..." class="w-full" />
+                            </UFormField>
+                        </div>
+                        <UButton label="Ajouter" icon="i-lucide-link" :loading="isAddingRecord"
+                                 :disabled="!selectedOrgId" @click="addAffectation" />
+                    </div>
+
+                    <!-- Liste des affectations -->
+                    <UTable :data="affectations || []" :columns="columns" :loading="loadingAffectations"
+                            class="border border-(--ui-border) rounded-md overflow-hidden" :ui="{
+                                base: 'table-fixed border-separate border-spacing-0',
+                                thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
+                                tbody: '[&>tr]:last:[&>td]:border-b-0',
+                                th: 'py-2 px-3 border-y border-(--ui-border) first:border-l last:border-r',
+                                td: 'py-2 px-3 border-b border-(--ui-border)'
+                            }">
+                        <template #empty-state>
+                            <div class="flex flex-col items-center justify-center py-6 text-(--ui-text-muted) text-sm">
+                                <p>Aucun utilisateur n'est affecté à ce rôle.</p>
+                            </div>
+                        </template>
+                    </UTable>
+                </div>
+            </div>
+            <div v-else class="py-12 flex justify-center">
+                <UIcon name="i-lucide-loader-2" class="animate-spin h-8 w-8 text-(--ui-primary)" />
+            </div>
+        </template>
+    </UModal>
+</template>
+
 <script setup lang="ts">
 import type { SelectMenuItem, TableColumn } from '@nuxt/ui'
-import type { Role, Organisation, ArticleAffectation } from '~/types'
+import type { Role, Organisation, ArticleAffectation, UserRole } from '~/types'
 
 const props = defineProps<{ role: Role | null }>()
 const open = defineModel<boolean>('open', { default: false })
@@ -15,13 +88,13 @@ const UButton = resolveComponent('UButton')
 
 // Fetch affectations (organisations) for the current article
 const { data: affectations, refresh: refreshAffectations, pending: loadingAffectations } = await useAsyncData(
-    () => `article-affectations-${props.role?.id}`,
+    () => `user-affectations-${props.role?.id}`,
     async () => {
         if (!props.role?.id) return []
         const { data, error } = await supabase
-            .from('article_organisations')
-            .select('*, organisation:organisations(*)')
-            .eq('article_id', props.role.id)
+            .from('user_roles')
+            .select('*, users(*)')
+            .eq('role_id', props.role.id)
 
         if (error) {
             console.error('Error fetching affectations:', error)
@@ -33,8 +106,8 @@ const { data: affectations, refresh: refreshAffectations, pending: loadingAffect
 )
 
 // Fetch organisations for selection (excluding already assigned)
-const { data: organisations, refresh: refreshOrganisations } = await useAsyncData<Organisation[]>(
-    () => `organisations-available-${props.role?.id}`,
+const { data: users, refresh: refreshOrganisations } = await useAsyncData<Profil[]>(
+    () => `users-available-${props.role?.id}`,
     async () => {
         if (!props.role?.id) return []
 
@@ -61,7 +134,12 @@ const orgItems = computed<SelectMenuItem[]>(() => organisations.value?.map(org =
     id: String(org.id)
 })) || [])
 
-const columns: TableColumn<any>[] = [
+const columns: TableColumn<UserRole>[] = [
+    {
+        id: 'utilisateur',
+        header: 'Utilisateur',
+        cell: ({ row }) => h('p', { class: 'font-medium text-(--ui-text-highlighted)' }, row.original.user?.nom || 'N/A')
+    },
     {
         id: 'organisation',
         header: 'Organisation',
@@ -123,75 +201,4 @@ async function deleteAffectation(id: number) {
 }
 </script>
 
-<template>
-    <UModal v-model:open="open" title="Détails & Affectations" :description="props.role?.nom || 'Article'" :ui="{
-        wrapper: 'w-[600px]'
-    }">
-        <template #body>
-            <div v-if="props.role" class="space-y-6">
-                <!-- Détails de l'article -->
-                <div
-                    class="grid grid-cols-2 gap-4 text-sm p-4 bg-(--ui-bg-elevated) rounded-lg border border-(--ui-border)">
-                    <div>
-                        <p class="text-(--ui-text-muted) mb-1">Nom</p>
-                        <p class="font-medium text-(--ui-text-highlighted)">{{ props.role.nom }}</p>
-                    </div>
-                    <div>
-                        <p class="text-(--ui-text-muted) mb-1">Code</p>
-                        <p class="font-mono text-(--ui-text-highlighted)">{{ props.role.code }}</p>
-                    </div>
-                    <div class="col-span-2">
-                        <p class="text-(--ui-text-muted) mb-1">Description</p>
-                        <p>{{ props.role.description }}</p>
-                    </div>
-                    <div v-if="props.role.entite" class="col-span-2">
-                        <p class="text-(--ui-text-muted) mb-1">Entité</p>
-                        <p class="font-medium text-(--ui-text-highlighted)">
-                            {{ (props.role.entite as any)?.nom }}
-                        </p>
-                    </div>
-                </div>
 
-                <!-- Affectations -->
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between">
-                        <h3 class="text-sm font-semibold uppercase tracking-wider text-(--ui-text-muted)">
-                            Organisations Affectées
-                        </h3>
-                    </div>
-
-                    <!-- Formulaire d'ajout d'affectation -->
-                    <div class="flex items-end gap-2">
-                        <div class="flex-1">
-                            <UFormField label="Affecter à une organisation" name="organisation">
-                                <USelectMenu v-model="selectedOrgId" value-key="id" :items="orgItems"
-                                             placeholder="Choisir une organisation..." class="w-full" />
-                            </UFormField>
-                        </div>
-                        <UButton label="Ajouter" icon="i-lucide-link" :loading="isAddingRecord"
-                                 :disabled="!selectedOrgId" @click="addAffectation" />
-                    </div>
-
-                    <!-- Liste des affectations -->
-                    <UTable :data="affectations || []" :columns="columns" :loading="loadingAffectations"
-                            class="border border-(--ui-border) rounded-md overflow-hidden" :ui="{
-                                base: 'table-fixed border-separate border-spacing-0',
-                                thead: '[&>tr]:bg-(--ui-bg-elevated)/50 [&>tr]:after:content-none',
-                                tbody: '[&>tr]:last:[&>td]:border-b-0',
-                                th: 'py-2 px-3 border-y border-(--ui-border) first:border-l last:border-r',
-                                td: 'py-2 px-3 border-b border-(--ui-border)'
-                            }">
-                        <template #empty-state>
-                            <div class="flex flex-col items-center justify-center py-6 text-(--ui-text-muted) text-sm">
-                                <p>Aucune affectation trouvée pour cet article.</p>
-                            </div>
-                        </template>
-                    </UTable>
-                </div>
-            </div>
-            <div v-else class="py-12 flex justify-center">
-                <UIcon name="i-lucide-loader-2" class="animate-spin h-8 w-8 text-(--ui-primary)" />
-            </div>
-        </template>
-    </UModal>
-</template>

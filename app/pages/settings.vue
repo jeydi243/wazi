@@ -35,6 +35,11 @@ const links = [{
     icon: 'i-lucide-shield',
     to: '/settings/users'
 },
+{
+    label: 'Rôles',
+    icon: 'i-lucide-shield',
+    to: '/settings/roles'
+},
 
 {
     label: 'Clients',

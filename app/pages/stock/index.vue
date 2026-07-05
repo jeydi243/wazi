@@ -135,6 +135,7 @@ import type { Row } from '@tanstack/table-core'
 import type { TableColumn, DropdownMenuItem, SelectMenuItem } from '@nuxt/ui'
 import type { Affectation, Organisation, STKHeader, Stock } from '~/types'
 import * as XLSX from 'xlsx'
+import { tableUI } from '~/composables/useDataTable'
 
 // 1. SEO
 useHead({
