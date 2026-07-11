@@ -1,19 +1,20 @@
 import { defineStore } from 'pinia'
-import type { Lookup, Classe, Organisation, Affectation, Facture, Client, Article, Profil } from '~/types'
+import type { Lookup, Classe, Organisation, Affectation, Facture, Client, Article, Profil, UserRole } from '~/types'
 
 export const useParametresStore = defineStore('parametres', () => {
   const supabase = useSupabaseClient()
   const user = useSupabaseUser()
+  const userStore = useUsersStore()
   const lookups = ref<Lookup[]>([])
   const classes = ref<Classe[]>([])
   const clients = ref<Client[]>([])
-  const articles = ref<Article[]>([])
   const profils = ref<Profil[]>([])
-  const organisations = ref<Organisation[]>([])
+  const articles = ref<Article[]>([])
+  const owner_id = ref<string | null>(null)
+  const usersRoles = ref<UserRole[]>([])
   const affectations = ref<Affectation[]>([])
+  const organisations = ref<Organisation[]>([])
   const invoiceHeaders = ref<Facture[]>([])
-  let channels: any = null
-  const owner_id = ref<string | undefined>(undefined)
 
   const getClasseById = computed(() => (id: string) => {
     return classes.value.find(classe => classe.id === id)?.nom
@@ -31,6 +32,10 @@ export const useParametresStore = defineStore('parametres', () => {
   const getTypeArticles = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_articles'))
   const getTypeOrganisations = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'type_organisations'))
   const getGroupeTaxation = computed(() => lookups.value.filter(lookup => lookup.classe.table_name === 'groupe_taxation'))
+  const getAffectations = computed(() => affectations.value)
+  const getAffectationsMagasin = computed(() => affectations.value.filter(a => a.organisation?.lookup?.code === 'MAG'))
+  const getEmplacements = computed(() => (organisation_parent_id: string) => organisations.value.filter(o => o.lookup?.code === 'EMP' && o.organisation_parent_id === organisation_parent_id))
+  const getTypeOrganisation = computed(() => lookups.value.filter(lookup => lookup.classe.code === 'T-ORG'))
 
   const getClasseItems = computed(() => {
     return classes.value.map(classe => ({
@@ -39,97 +44,56 @@ export const useParametresStore = defineStore('parametres', () => {
     }))
   })
 
-
-  const getAffectations = computed(() => affectations.value)
-  const getAffectationsMagasin = computed(() => affectations.value.filter(a => a.organisation?.lookup?.code === 'MAG'))
-  const getEmplacements = computed(() => (organisation_parent_id: string) => organisations.value.filter(o => o.lookup?.code === 'EMP' && o.organisation_parent_id === organisation_parent_id))
-  const getTypeOrganisation = computed(() => lookups.value.filter(lookup => lookup.classe.code === 'T-ORG'))
-
-  async function init_user() {
-    if (!user.value) {
-      return {
-        data: null,
-        error: 'User not logged in',
-        loading: false
-      }
-    }
-
-    const { data: affectationsData, error: affectationsError } = await supabase
-      .from('affectations')
-      .select('id, date_debut, date_fin, client_id, user_id, organisation:organisation_id(id, nom, code, description, lookup:type_id(id, code, description, classe:classe_id(*,code,description)))')
-      .eq('user_id', user.value.id)
-
-    if (affectationsData) affectations.value = affectationsData as unknown as Affectation[]
-
-    return {
-      data: {
-        affectations: affectationsData
-      },
-      error: affectationsError,
-      loading: false
-    }
+  function setOwnerID(id: string) {
+    owner_id.value = id
   }
 
   async function init() {
-    
+    const { usersRoles, owners } = userStore
+    let profilsError: any, articlesError: any, organisationsError: any, invoicesError: any, clientsError: any, usersRolesError: any
+    let profilsData: any, articlesData: any, organisationsData: any, invoicesData: any, clientsData: any, usersRolesData: any
 
-    const { data: lookupsData, error: lookupsError } = await supabase.from('lookups').select('*, classe:classe_id(id, code, table_name, description)')
+    const { data: lookupsData, error: lookupsError } = await supabase.from('lookups').select('*, classe:classe_id(*)')
+    if (lookupsError) console.error('[Store] Erreur chargement lookups:', lookupsError)
     if (lookupsData) lookups.value = lookupsData as unknown as Lookup[]
 
-    const { data: profilsData, error: profilsError } = await supabase.from('profils').select('*').eq('owner_id', owner_id );
-    if (profilsData) profils.value = profilsData as unknown as Profil[]
-
     const { data: classesData, error: classesError } = await supabase.from('classes').select('*')
+    if (classesError) console.error('[Store] Erreur chargement classes:', classesError)
     if (classesData) classes.value = classesData as unknown as Classe[]
 
-    const { data: articlesData, error: articlesError } = await supabase.from('articles').select('*')
-    if (articlesData) articles.value = articlesData as unknown as Article[]
+    if (owner_id.value) {
+      ; ({ data: profilsData, error: profilsError } = await supabase.from('profils').select('*').eq('owner_id', owner_id.value))
+      if (profilsError) console.error('[Store] Erreur chargement profils:', profilsError)
+      if (profilsData) profils.value = profilsData as unknown as Profil[]
 
-    const { data: organisationsData, error: organisationsError } = await supabase.from('organisations').select('*, lookup:type_id(id, code, description, classe:classe_id(id, code,description))')
-    if (organisationsData) organisations.value = organisationsData as unknown as Organisation[]
+        ; ({ data: articlesData, error: articlesError } = await supabase.from('articles').select('*').eq('owner_id', owner_id.value))
+      if (articlesError) console.error('[Store] Erreur chargement articles:', articlesError)
+      if (articlesData) articles.value = articlesData as unknown as Article[]
 
-    const { data: invoicesData, error: invoicesError } = await supabase.from('invoices').select('*')
-    if (invoicesData) invoiceHeaders.value = invoicesData as unknown as Facture[]
+        ; ({ data: organisationsData, error: organisationsError } = await supabase.from('organisations').select('*, lookup:type_id(id, code, description, classe:classe_id(id, code,description))').eq('owner_id', owner_id.value))
+      if (organisationsError) console.error('[Store] Erreur chargement organisations:', organisationsError)
+      if (organisationsData) organisations.value = organisationsData as unknown as Organisation[]
 
-    const { data: clientsData, error: clientsError } = await supabase.from('clients').select('*')
-    if (clientsData) clients.value = clientsData as unknown as Client[]
+        ; ({ data: invoicesData, error: invoicesError } = await supabase.from('invoices').select('*').eq('owner_id', owner_id.value))
+      if (invoicesError) console.error('[Store] Erreur chargement invoices:', invoicesError)
+      if (invoicesData) invoiceHeaders.value = invoicesData as unknown as Facture[]
 
+        ; ({ data: clientsData, error: clientsError } = await supabase.from('clients').select('*, type:type_id(*)').eq('owner_id', owner_id.value))
+      if (clientsError) console.error('[Store] Erreur chargement clients:', clientsError)
+      if (clientsData) clients.value = clientsData as unknown as Client[]
 
-    if (!channels) {
-      channels = supabase.channel('custom-all-channel')
-        .on(
-          'postgres_changes',
-          { event: '*', schema: 'public', table: 'organisations' },
-          (payload) => {
-            console.log('Change received organisations', payload)
-            if (payload.eventType === 'INSERT') {
-              organisations.value.push(payload.new as unknown as Organisation)
-            }
-            if (payload.eventType === 'UPDATE') {
-              const index = organisations.value.findIndex(o => o.id === payload.new.id)
-              if (index !== -1) {
-                organisations.value[index] = payload.new as unknown as Organisation
-              }
-            }
-            if (payload.eventType === 'DELETE') {
-              const index = organisations.value.findIndex(o => o.id === payload.old.id)
-              if (index !== -1) {
-                organisations.value.splice(index, 1)
-              }
-            }
-          }
-        )
-        .subscribe()
     }
+
     return {
       data: {
         lookups: lookupsData,
         classes: classesData,
         organisations: organisationsData,
         invoices: invoicesData,
-        clients: clientsData
+        clients: clientsData,
+        usersRoles: usersRolesData
       },
-      error: lookupsError || classesError || organisationsError || clientsError || invoicesError || articlesError,
+      error: lookupsError || classesError || profilsError || usersRolesError || organisationsError || clientsError || invoicesError || articlesError,
       loading: false
     }
   }
@@ -141,13 +105,14 @@ export const useParametresStore = defineStore('parametres', () => {
     organisations,
     profils,
     owner_id,
+    usersRoles,
     affectations,
     articles,
     getClasseById,
     getClasseItems,
     getLookupsById,
     init,
-    init_user,
+    setOwnerID,
     getAffectations,
     getAffectationsMagasin,
     getTypeOrganisation,

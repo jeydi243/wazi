@@ -26,7 +26,8 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
     avatar: user.value.avatar
 }], [{
     label: 'Profile',
-    icon: 'i-lucide-user'
+    icon: 'i-lucide-user',
+    to: '/profile'
 }, {
     label: 'Parametres',
     icon: 'i-lucide-settings',

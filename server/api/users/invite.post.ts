@@ -6,20 +6,17 @@ export default defineEventHandler(async (event) => {
     const client = await serverSupabaseServiceRole(event)
     const body = await readBody(event)
 
-    const { email, password, email_confirm, user_metadata } = body
+    const { email, redirectTo } = body
 
-    if (!email || !password) {
+    if (!email) {
         throw createError({
             statusCode: 400,
-            statusMessage: 'Email and password are required',
+            statusMessage: 'Email is required',
         })
     }
 
-    const { data, error } = await client.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: email_confirm ?? true,
-        user_metadata,
+    const { data, error } = await client.auth.admin.inviteUserByEmail(email, {
+        redirectTo: redirectTo || undefined,
     })
 
     if (error) {

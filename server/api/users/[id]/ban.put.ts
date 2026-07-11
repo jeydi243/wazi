@@ -4,22 +4,22 @@ export default defineEventHandler(async (event) => {
     await requireAdmin(event)
 
     const client = await serverSupabaseServiceRole(event)
+    const id = getRouterParam(event, 'id')
     const body = await readBody(event)
 
-    const { email, password, email_confirm, user_metadata } = body
-
-    if (!email || !password) {
+    if (!id) {
         throw createError({
             statusCode: 400,
-            statusMessage: 'Email and password are required',
+            statusMessage: 'User ID is required',
         })
     }
 
-    const { data, error } = await client.auth.admin.createUser({
-        email,
-        password,
-        email_confirm: email_confirm ?? true,
-        user_metadata,
+    const { ban } = body
+
+    const banDuration = ban ? '876600h' : 'none'
+
+    const { data, error } = await client.auth.admin.updateUserById(id, {
+        ban_duration: banDuration,
     })
 
     if (error) {

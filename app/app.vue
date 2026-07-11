@@ -1,15 +1,26 @@
+<template>
+    <UApp>
+        <NuxtLoadingIndicator />
+        <div data-vaul-drawer-wrapper>
+            <NuxtLayout>
+                <NuxtPage />
+            </NuxtLayout>
+        </div>
+    </UApp>
+</template>
+
 <script setup lang="ts">
 const colorMode = useColorMode()
 const { idle } = useIdle(2 * 60 * 1000) // 2 minutes
 const { isOnline } = useNetwork()
 
-const color = computed(() => colorMode.value === 'dark' ? '#111827' : 'white')
+// const color = computed(() => colorMode.value === 'dark' ? '#111827' : 'white')
 
 useHead({
     meta: [
         { charset: 'utf-8' },
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { key: 'theme-color', name: 'theme-color', content: color }
+        // { key: 'theme-color', name: 'theme-color', content: color }
     ],
     link: [
         { rel: 'icon', href: '/favicon.ico' }
@@ -18,15 +29,11 @@ useHead({
         lang: 'fr'
     }
 })
-
-const title = 'Wazi — Gestion médicale'
-const description = 'Wazi est une application de gestion médicale pour la prise en charge des patients, rendez-vous et consultations.'
-
 useSeoMeta({
-    title,
-    description,
-    ogTitle: title,
-    ogDescription: description,
+    title: 'Wazi — Facturation',
+    description: 'Wazi est une application de Facturation',
+    ogTitle: 'Wazi — Facturation',
+    ogDescription: 'Wazi est une application de Facturation',
 })
 
 const user = useSupabaseUser()
@@ -34,21 +41,26 @@ const parametresStore = useParametresStore()
 const toast = useToast()
 
 watch(user, async (newUser) => {
+    console.log('newUser', newUser)
     if (newUser) {
         const { error: initError } = await parametresStore.init()
+        const usersStore = useUsersStore()
+
+        await usersStore.init()
+
         if (initError) {
             console.error('[Store] Erreur init parametres:', initError)
             toast.add({
                 title: 'Erreur de chargement',
-                description: 'Impossible de charger les paramètres. Veuillez rafraîchir la page.',
+                description: 'Impossible de charger les paramètres.' + JSON.stringify(initError.message),
                 color: 'error'
             })
         }
 
-        const { error: userError } = await parametresStore.init_user()
-        if (userError) {
-            console.error('[Store] Erreur init_user:', userError)
-        }
+        // const { error: userError } = await parametresStore.init_user()
+        // if (userError) {
+        //     console.error('[Store] Erreur init_user:', userError)
+        // }
     }
 }, { immediate: true })
 
@@ -82,16 +94,6 @@ watch(isOnline, (online) => {
 })
 </script>
 
-<template>
-    <UApp>
-        <NuxtLoadingIndicator />
-        <div data-vaul-drawer-wrapper>
-            <NuxtLayout>
-                <NuxtPage />
-            </NuxtLayout>
-        </div>
-    </UApp>
-</template>
 
 <style>
 .page-enter-active,

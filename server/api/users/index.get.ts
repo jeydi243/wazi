@@ -1,10 +1,10 @@
 import { serverSupabaseServiceRole } from '#supabase/server'
-// import { createRouter, defineEventHandler, useBase } from 'h3'
-
 
 export default defineEventHandler(async (event) => {
+    await requireAdmin(event)
+
     const client = await serverSupabaseServiceRole(event)
-  
+
     const { data: { users }, error } = await client.auth.admin.listUsers()
 
     if (error) {

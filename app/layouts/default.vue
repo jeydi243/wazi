@@ -142,6 +142,14 @@ const links = [
             onSelect: () => {
                 open.value = false
             }
+        },
+        {
+            label: 'Administration',
+            to: '/admin',
+            icon: 'i-lucide-shield',
+            onSelect: () => {
+                open.value = false
+            }
         }
         ]
     }

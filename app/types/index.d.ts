@@ -11,6 +11,11 @@ export interface User {
     status: UserStatus
     location: string
 }
+export interface Owner {
+    id: string
+    nom: string
+    description: string
+}
 
 export interface Mail {
     id: number
