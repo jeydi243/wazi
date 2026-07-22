@@ -11,6 +11,7 @@ const schema = z.object({
     date_naissance: z.date().max(new Date(), 'Date de naissance must be in the past')
 })
 const toast = useToast()
+const patientsStore = usePatientsStore()
 const open = ref(false)
 const emit = defineEmits(['patient-added'])
 const supabase = useSupabaseClient()
@@ -46,17 +47,13 @@ const dateNaissanceModel = computed({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('patients')
-        .insert(event?.data as any)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new patient ${error.message}`, color: 'error' })
-    } else {
-        toast.add({ title: 'Success', description: `New patient ${event.data.nom} ${event.data.prenom} ${event.data.postnom} added`, color: 'success' })
+    try {
+        await patientsStore.create(event?.data as any)
+        toast.add({ title: 'Succès', description: `Nouveau patient ${event.data.nom} ${event.data.prenom} ajouté`, color: 'success' })
         open.value = false
         emit('patient-added')
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: `Impossible d'ajouter : ${err.message}`, color: 'error' })
     }
 }
 

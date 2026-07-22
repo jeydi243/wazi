@@ -12,6 +12,7 @@ const emit = defineEmits(['update:open', 'line-added'])
 
 const supabase = useSupabaseClient()
 const toast = useToast()
+const stockStore = useStockStore()
 
 const isOpen = computed({
     get: () => props.open,
@@ -44,20 +45,17 @@ const articleItems = computed<SelectMenuItem[]>(() =>
 )
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('stk_trx_lines_details')
-        .insert({
+    try {
+        await stockStore.createLinesDetails([{
             line_id: props.lineId,
             ...event.data
-        } as never)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-    } else {
+        }] as any)
+        toast.add({ title: 'Succès', description: 'Numéros de lot ajoutés', color: 'success' })
         toast.add({ title: 'Succès', description: 'Ligne ajoutée', color: 'success' })
         emit('line-added')
         isOpen.value = false
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

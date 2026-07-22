@@ -15,6 +15,7 @@ const emit = defineEmits(['update:open', 'reception-finished'])
 // 2. Services et composables
 const supabase = useSupabaseClient()
 const toast = useToast()
+const stockStore = useStockStore()
 
 const isOpen = computed({
     get: () => props.open,
@@ -126,12 +127,12 @@ function getRowItems(row: Row<STKLine>): DropdownMenuItem[][] {
             icon: 'i-lucide-trash',
             color: 'error' as const,
             async onSelect() {
-                const { error } = await supabase.from('stk_trx_lines').delete().eq('id', (row.original as any).id)
-                if (error) {
-                    toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-                } else {
+                try {
+                    await stockStore.removeLine((row.original as any).id)
                     toast.add({ title: 'Supprimé', description: 'Ligne supprimée', color: 'success' })
                     await refresh()
+                } catch (err: any) {
+                    toast.add({ title: 'Erreur', description: err.message, color: 'error' })
                 }
             }
         }
@@ -142,24 +143,19 @@ async function finishReception() {
     if (!props.stk_trx_header?.id) return
 
     finishing.value = true
-    const { data: dataRPC, error: errorRPC } = await supabase.rpc('stock_update', { p_stk_header_id: props.stk_trx_header.id })
-    console.log('Données retournés par la fonction stock_update ', { dataRPC })
-
-    if (errorRPC || dataRPC?.includes('ERREUR')) {
-        toast.add({ title: 'Erreur', description: errorRPC?.message || '' + dataRPC, color: 'error' })
-    } else {
-        const { data: dataInsert, error: errorInsert } = await supabase
-            .from('stk_trx_headers')
-            .update({ statut: 'Terminé' } as never)
-            .eq('id', props.stk_trx_header.id)
-        if (errorInsert) {
-            toast.add({ title: 'Erreur', description: errorInsert?.message, color: 'error' })
+    try {
+        const result = await stockStore.executeStockUpdate(props.stk_trx_header.id)
+        if (result?.includes && result.includes('ERREUR')) {
+            toast.add({ title: 'Erreur', description: result, color: 'error' })
         } else {
+            await stockStore.updateHeader(props.stk_trx_header.id, { statut: 'Terminé' } as any)
             toast.add({ title: 'Succès', description: 'Réception terminée', color: 'success' })
             emit('reception-finished')
             openConfirmFinish.value = false
             isOpen.value = false
         }
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
     finishing.value = false
 }

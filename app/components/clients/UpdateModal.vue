@@ -32,6 +32,7 @@ import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import type { Client } from '~/types'
 
 const toast = useToast()
+const clientsStore = useClientsStore()
 const supabase = useSupabaseClient()
 const parametresStore = useParametresStore()
 
@@ -100,17 +101,9 @@ watch(() => props.client, (newClient) => {
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (!props.client?.id) return
-
-    const { error } = await supabase
-        .from('clients')
-        .update(event.data as never)
-        .eq('id', props.client.id)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: `Impossible de mettre à jour : ${error.message}`, color: 'error' })
-    } else {
-        toast.add({ title: 'Succès', description: `Client "${event.data.nom}" mise à jour`, color: 'success' })
+    try {
+        await clientsStore.update(props.client.id, event.data as any)
+        toast.add({ title: 'Succès', description: `Client "${event.data.nom}" mis à jour`, color: 'success' })
         emit('client-updated')
         isOpen.value = false
         state.nom = undefined
@@ -118,6 +111,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         state.description = undefined
         state.type_id = undefined
         state.nif = undefined
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

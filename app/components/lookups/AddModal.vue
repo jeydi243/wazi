@@ -17,8 +17,8 @@ const schema = z.object({
 })
 const open = ref(false)
 const toast = useToast()
+const lookupsStore = useLookupsStore()
 type Schema = z.output<typeof schema>
-const supabase = useSupabaseClient()
 const state = reactive<Partial<Schema>>({
     nom: undefined,
     code: undefined,
@@ -29,20 +29,16 @@ const paramStore = useParametresStore()
 const classes = computed(() => paramStore.getClasseItems)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('lookups')
-        .insert(event?.data as never)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: `Impossible d'ajouter le lookup ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await lookupsStore.createLookup(event?.data as any)
         toast.add({ title: 'Succès', description: `Nouveau lookup ${event.data.nom} ajouté`, color: 'success' })
         open.value = false
         state.code = undefined
         state.nom = undefined
         state.description = undefined
         emit('lookup_added')
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 

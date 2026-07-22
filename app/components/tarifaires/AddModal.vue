@@ -14,6 +14,7 @@ const open = ref(false)
 const toast = useToast()
 type Schema = z.output<typeof schema>
 const supabase = useSupabaseClient()
+const tarifairesStore = useTarifairesStore()
 const state = reactive<Partial<Schema>>({
     nom: undefined,
     description: undefined,
@@ -40,17 +41,13 @@ function onError(error: FormErrorEvent) {
 }
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('tarifaires')
-        .insert(event?.data as any)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new tarifaire ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await tarifairesStore.create(event?.data as any)
         toast.add({ title: 'Success', description: `New tarifaire ${event.data.nom} added`, color: 'success' })
         open.value = false
         emit('tarifaire-added')
+    } catch (err: any) {
+        toast.add({ title: 'Error', description: `Can't add new tarifaire ${err.message}`, color: 'error' })
     }
 }
 </script>

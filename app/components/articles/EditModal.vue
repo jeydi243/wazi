@@ -62,23 +62,18 @@ const itemsUOM = computed<SelectMenuItem[]>(() => lookupsUOM.value?.map(lookup =
     id: String(lookup?.id)
 })) || [])
 
+const articlesStore = useArticlesStore()
 const emit = defineEmits(['article-updated'])
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (!props.article?.id) return
-
-    const { data, error } = await supabase
-        .from('articles')
-        .update(event?.data as never)
-        .eq('id', props.article.id)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Impossible de modifier l'article: ${error.message}`, color: 'error' })
-    } else {
-        toast.add({ title: 'Success', description: `Article ${event.data.nom} modifié`, color: 'success' })
+    try {
+        await articlesStore.update(props.article.id, event?.data as any)
+        toast.add({ title: 'Succès', description: `Article ${event.data.nom} modifié`, color: 'success' })
         open.value = false
         emit('article-updated')
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

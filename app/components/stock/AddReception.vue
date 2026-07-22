@@ -78,20 +78,19 @@ const itemsMagasin = computed<SelectMenuItem[]>(() => magasinsUser.value?.map((i
 })) || [])
 
 const emit = defineEmits(['reception-added'])
+const stockStore = useStockStore()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('stk_trx_headers')
-        .insert([{ ...event.data }] as never[])
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Impossible d'ajouter la reception ${error.message}`, color: 'error' })
-    } else {
-        toast.add({ title: 'Reception Crée', description: `Nouvelle reception externe créée ${event.data.numero_document}`, color: 'success' })
+    try {
+        await stockStore.createHeader({ ...event.data } as any)
+        toast.add({ title: 'Réception créée', description: `Nouvelle réception externe créée ${event.data.numero_document}`, color: 'success' })
         emit('reception-added')
-        open.value = false
+        isOpen.value = false
+        Object.assign(state, defaultState)
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
+}
 }
 </script>
 

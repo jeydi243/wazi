@@ -11,6 +11,7 @@ const schema = z.object({
 })
 const open = ref(false)
 const toast = useToast()
+const lookupsStore = useLookupsStore()
 type Schema = z.output<typeof schema>
 const supabase = useSupabaseClient<any>()
 const state = reactive<Partial<Schema>>({
@@ -22,16 +23,12 @@ const state = reactive<Partial<Schema>>({
 
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('classes')
-        .insert(event.data)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new classe ${error.message}`, color: 'error' })
-    } else {
-        toast.add({ title: 'Success', description: `New classe ${event.data.nom} added`, color: 'success' })
+    try {
+        await lookupsStore.createClasse(event.data)
+        toast.add({ title: 'Succès', description: `Nouvelle classe ${event.data.nom} ajoutée`, color: 'success' })
         open.value = false
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

@@ -76,13 +76,9 @@ const itemsEmplacements = computed<SelectMenuItem[]>(() =>
 )
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('stk_trx_lines')
-        .insert({
-            // header_id: props.header?.id,
-            ...event.data
-        } as never)
-        .select()
+    try {
+        await stockStore.createLine({ ...event.data } as any)
+        toast.add({ title: 'Succès', description: 'Ligne ajoutée', color: 'success' })
 
     if (error) {
         toast.add({ title: 'Erreur', description: error.message, color: 'error' })
@@ -91,6 +87,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         emit('line-added')
         isOpen.value = false
         Object.assign(state, defaultState)
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

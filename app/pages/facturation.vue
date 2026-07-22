@@ -32,6 +32,7 @@
             </UDashboardNavbar>
         </template>
         <template #body>
+            <NuxtErrorBoundary>
             <!-- <ClientOnly> -->
             <UTable ref="table" v-model:column-filters="columnFilters" v-model:column-visibility="columnVisibility"
                 v-model:row-selection="rowSelection" v-model:pagination="pagination" empty="Aucune facture disponible"
@@ -65,6 +66,7 @@
                         :total="totalFilteredRows" @update:page="setPage" />
                 </div>
             </div>
+            </NuxtErrorBoundary>
         </template>
     </UDashboardPanel>
 </template>
@@ -75,16 +77,15 @@ import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import type { Facture } from '~/types'
 
 // 1. SEO
-useHead({
-    title: 'Facturation',
-    meta: [
-        { name: 'description', content: 'Gérer les facturations.' }
-    ]
+useSeoMeta({
+    title: 'Facturation - Wazi',
+    description: 'Gérer les facturations.',
 })
 
 // 2. Services et composables
 const supabase = useSupabaseClient()
 const toast = useToast()
+const facturesStore = useFacturesStore()
 const { copy } = useClipboard()
 
 // 3. resolveComponent() — obligatoire avant tout usage dans h()
@@ -264,28 +265,14 @@ function getRowItems(row: Row<Facture>): DropdownMenuItem[][] {
 
 async function confirmDelete() {
     if (!factureToDelete.value) return
-
-    const { error } = await supabase
-        .from('factures')
-        .delete()
-        .eq('id', factureToDelete.value.id)
-
-    if (error) {
-        toast.add({
-            title: 'Erreur',
-            description: error.message,
-            color: 'error'
-        })
-    } else {
-        toast.add({
-            title: 'Succès',
-            description: 'Réception supprimée avec succès',
-            color: 'success'
-        })
+    try {
+        await facturesStore.remove(factureToDelete.value.id)
+        toast.add({ title: 'Succès', description: 'Facture supprimée', color: 'success' })
         await refreshFactures()
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
     openConfirmDelete.value = false
-    // receptionToDelete.value = null
 }
 
 // 8. Chargement des données

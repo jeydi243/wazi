@@ -3,7 +3,9 @@
         <NuxtLoadingIndicator />
         <div data-vaul-drawer-wrapper>
             <NuxtLayout>
+                <NuxtErrorBoundary>
                 <NuxtPage />
+                </NuxtErrorBoundary>
             </NuxtLayout>
         </div>
     </UApp>

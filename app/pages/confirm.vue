@@ -1,6 +1,11 @@
 <script setup lang="ts">
 definePageMeta({
-    layout: false // On ne veut pas de sidebar sur cet écran
+    layout: false
+})
+
+useSeoMeta({
+    title: 'Connexion en cours - Wazi',
+    description: 'Initialisation de votre session.',
 })
 
 const steps = [

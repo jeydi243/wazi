@@ -21,6 +21,7 @@ const schema = z.object({
 const open = ref(false)
 const toast = useToast()
 const supabase = useSupabaseClient()
+const organisationsStore = useOrganisationsStore()
 const { getAffectationsMagasin } = useParametresStore()
 type Schema = z.output<typeof schema>
 
@@ -52,29 +53,24 @@ const itemsMagasin = computed<SelectMenuItem[]>(() => getAffectationsMagasin.map
 })) || [])
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    console.log(props.parent)
     if (!props.parent) return
-    const { error } = await supabase.from('organisations')
-        .insert({
+    try {
+        await organisationsStore.create({
             nom: event.data.nom,
             description: event.data.description,
             code: event.data.code,
             lookup_id: event.data.lookup_id,
             organisation_parent_id: props.parent.id
-        } as never)
-
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: error.code + ':' + (error.hint || error.message), color: 'error' })
-    } else {
-        toast.add({ title: 'Succès', description: `Service ${event.data.nom} ajouté`, color: 'success' })
+        } as any)
+        toast.add({ title: 'Succès', description: `Emplacement ${event.data.nom} créé`, color: 'success' })
         emit('emplacement-added')
         open.value = false
-        // Reset state
         state.nom = undefined
         state.description = undefined
         state.code = undefined
         state.lookup_id = undefined
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.code ? err.code + ':' + err.message : err.message, color: 'error' })
     }
 }
 </script>

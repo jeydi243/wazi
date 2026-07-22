@@ -26,6 +26,7 @@ const isOpen = computed({
 })
 
 const toast = useToast()
+const patientsStore = usePatientsStore()
 const supabase = useSupabaseClient()
 
 const state = reactive<Partial<Schema>>({
@@ -68,18 +69,13 @@ watch(() => props.open, (newVal) => {
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (!props.patient?.id) return
-
-    const { error } = await supabase
-        .from('patients')
-        .update(event.data)
-        .eq('id', props.patient.id)
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-    } else {
+    try {
+        await patientsStore.update(props.patient.id, event.data as any)
         toast.add({ title: 'Succès', description: 'Informations mises à jour.', color: 'success' })
         isOpen.value = false
         emit('patient-updated')
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 

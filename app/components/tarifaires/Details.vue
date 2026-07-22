@@ -61,6 +61,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:open'])
 const supabase = useSupabaseClient()
+const tarifairesStore = useTarifairesStore()
 const toast = useToast()
 
 const { data: tarifairesLines, refresh: refreshTarifairesLines, status: tarifairesLinesStatus } = useAsyncData(
@@ -107,18 +108,8 @@ const selectedTarrifaireId = ref<string | null>(null)
 async function stopTarrifaireLine() {
     if (!selectedTarrifaireId.value) return
 
-    const { error } = await supabase
-        .from('tarifaires')
-        .update({ end_date: new Date().toISOString() } as never)
-        .eq('id', selectedTarrifaireId.value)
-
-    if (error) {
-        toast.add({
-            title: 'Error',
-            description: error.message,
-            color: 'error'
-        })
-    } else {
+    try {
+        await tarifairesStore.update(selectedTarrifaireId.value, { end_date: new Date().toISOString() } as any)
         toast.add({
             title: 'Succès',
             description: 'Le tarifaire a été arrêtée avec succès.',
@@ -126,6 +117,12 @@ async function stopTarrifaireLine() {
         })
         refreshTarifairesLines()
         isStopModalOpen.value = false
+    } catch (err: any) {
+        toast.add({
+            title: 'Error',
+            description: err.message,
+            color: 'error'
+        })
     }
 }
 

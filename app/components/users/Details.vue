@@ -131,6 +131,7 @@ const props = defineProps({
 
 const emit = defineEmits(['update:open'])
 const supabase = useSupabaseClient()
+const rolesStore = useRolesStore()
 const toast = useToast()
 const items = [
     {
@@ -206,18 +207,8 @@ const selectedAffectationId = ref<string | null>(null)
 async function stopAffectation() {
     if (!selectedAffectationId.value) return
 
-    const { error } = await supabase
-        .from('affectations')
-        .update({ end_date: new Date().toISOString() } as never)
-        .eq('id', selectedAffectationId.value)
-
-    if (error) {
-        toast.add({
-            title: 'Error',
-            description: error.message,
-            color: 'error'
-        })
-    } else {
+    try {
+        await rolesStore.revokeAffectation(selectedAffectationId.value)
         toast.add({
             title: 'Succès',
             description: 'L\'affectation a été arrêtée avec succès.',
@@ -225,23 +216,19 @@ async function stopAffectation() {
         })
         refreshAffectations()
         isStopModalOpen.value = false
+    } catch (err: any) {
+        toast.add({
+            title: 'Error',
+            description: err.message,
+            color: 'error'
+        })
     }
 }
 async function stopRole() {
     if (!selectedRoleId.value) return
 
-    const { error } = await supabase
-        .from('user_roles')
-        .update({ date_fin: new Date().toISOString() } as never)
-        .eq('id', selectedRoleId.value)
-
-    if (error) {
-        toast.add({
-            title: 'Error',
-            description: error.message,
-            color: 'error'
-        })
-    } else {
+    try {
+        await rolesStore.revokeRole(selectedRoleId.value)
         toast.add({
             title: 'Succès',
             description: 'Le rôle a été arrêté avec succès.',
@@ -249,6 +236,12 @@ async function stopRole() {
         })
         refreshRoles()
         isStopRoleModalOpen.value = false
+    } catch (err: any) {
+        toast.add({
+            title: 'Error',
+            description: err.message,
+            color: 'error'
+        })
     }
 }
 const columnsAffectations: TableColumn<Affectation>[] = [

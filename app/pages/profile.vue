@@ -10,6 +10,7 @@ useHead({
 const supabase = useSupabaseClient()
 const toast = useToast()
 const authUser = useSupabaseUser()
+const profilsStore = useProfilsStore()
 
 const saving = ref(false)
 const uploading = ref(false)
@@ -64,16 +65,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
   saving.value = true
 
   try {
-    const { error } = await supabase
-      .from('profils')
-      .update({
-        nom: event.data.nom,
-        prenom: event.data.prenom,
-        postnom: event.data.postnom || null
-      } as never)
-      .eq('user_id', authUser.value.id)
-
-    if (error) throw error
+    await profilsStore.updateProfil(authUser.value.id, {
+      nom: event.data.nom,
+      prenom: event.data.prenom,
+      postnom: event.data.postnom || null,
+    } as any)
 
     toast.add({ title: 'Succès', description: 'Profil mis à jour.', color: 'success' })
     await refresh()
@@ -96,26 +92,8 @@ async function uploadAvatar() {
   uploading.value = true
 
   try {
-    const fileExt = selectedFile.value.name.split('.').pop() || 'jpg'
-    const fileName = `user-${authUser.value.id}-${Date.now()}.${fileExt}`
-    const filePath = `avatars/${fileName}`
-
-    const { error: uploadError } = await supabase.storage
-      .from('avatars')
-      .upload(filePath, selectedFile.value, { upsert: true })
-
-    if (uploadError) throw uploadError
-
-    const { data: { publicUrl } } = supabase.storage
-      .from('avatars')
-      .getPublicUrl(filePath)
-
-    const { error: updateError } = await supabase
-      .from('profils')
-      .update({ avatar: publicUrl } as never)
-      .eq('user_id', authUser.value.id)
-
-    if (updateError) throw updateError
+    const publicUrl = await profilsStore.uploadAvatar(selectedFile.value, authUser.value.id)
+    await profilsStore.updateAvatar(authUser.value.id, publicUrl)
 
     toast.add({ title: 'Succès', description: 'Photo de profil mise à jour.', color: 'success' })
     selectedFile.value = null

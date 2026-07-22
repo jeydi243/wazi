@@ -13,6 +13,7 @@ const toast = useToast()
 const open = ref(false)
 const emit = defineEmits(['patient-added'])
 const supabase = useSupabaseClient()
+const patientsStore = usePatientsStore()
 type Schema = z.output<typeof schema>
 const inputDateDebutRef = useTemplateRef('inputDateDebutRef')
 
@@ -63,17 +64,13 @@ const toCalendarDate = (date: Date) => {
 }
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('patients_organisations')
-        .insert(event?.data as any)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new patient ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await patientsStore.attachPatientOrg(event.data.patient_id, event.data.organisation_id)
         toast.add({ title: 'Success', description: `New patient attached to this organisation`, color: 'success' })
         open.value = false
         emit('patient-added')
+    } catch (err: any) {
+        toast.add({ title: 'Error', description: `Can't add new patient ${err.message}`, color: 'error' })
     }
 }
 

@@ -19,6 +19,7 @@ const schema = z.object({
 const open = ref(false)
 const toast = useToast()
 const supabase = useSupabaseClient()
+const organisationsStore = useOrganisationsStore()
 
 type Schema = z.output<typeof schema>
 
@@ -44,19 +45,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         return
     }
 
-    const { data, error } = await (supabase.from('organisations') as any)
-        .insert({
+    try {
+        await organisationsStore.create({
             nom: event.data.nom,
             description: event.data.description,
             code: event.data.code,
             lookup_id: (lookupData as any).id,
             organisation_parent_id: props.parent.id
-        })
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-    } else {
+        } as any)
         toast.add({ title: 'Succès', description: `Service ${event.data.nom} ajouté`, color: 'success' })
         emit('service-added')
         open.value = false
@@ -64,6 +60,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         state.nom = undefined
         state.description = undefined
         state.code = undefined
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

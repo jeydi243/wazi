@@ -18,6 +18,7 @@ const isOpen = computed({
 // 2. Services et composables
 const supabase = useSupabaseClient()
 const toast = useToast()
+const stockStore = useStockStore()
 
 // 3. resolveComponent() — obligatoire avant tout usage dans h()
 const UButton = resolveComponent('UButton')
@@ -61,13 +62,13 @@ const columns: TableColumn<STKLineDetail>[] = [
                     color: 'error',
                     variant: 'ghost',
                     async onClick() {
-                        const { error } = await supabase.from('stk_trx_details').delete().eq('id', row.original.id)
-                        if (error) {
-                            toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-                        } else {
+                        try {
+                            await stockStore.removeLineDetail(row.original.id)
                             toast.add({ title: 'Supprimé', description: 'Élément supprimé', color: 'success' })
                             await refresh()
                             emit('refresh')
+                        } catch (err: any) {
+                            toast.add({ title: 'Erreur', description: err.message, color: 'error' })
                         }
                     }
                 })

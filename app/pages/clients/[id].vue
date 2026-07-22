@@ -59,8 +59,9 @@ definePageMeta({
     name: 'client-id',
 
 })
-useHead({
-    title: 'Client',
+useSeoMeta({
+    title: 'Client - Wazi',
+    description: 'Détails du client.',
 })
 
 const items = ref<TabsItem[]>([

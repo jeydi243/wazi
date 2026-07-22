@@ -5,10 +5,6 @@ import { getPaginationRowModel, type Row } from '@tanstack/table-core'
 import { breakpointsTailwind, useBreakpoints } from '@vueuse/core'
 import type { Patient } from '~/types'
 
-definePageMeta({
-    pageTransition: false
-})
-
 useHead({
     title: 'Patients',
     meta: [
@@ -25,6 +21,7 @@ const {
     UBadge,
     UDropdownMenu,
     UCheckbox,
+    buildColumnDisplayItems,
     columnFilters,
     columnVisibility,
     rowSelection,
@@ -38,6 +35,8 @@ const {
     setPage,
     setStatusFilter
 } = useDataTable({ filterColumnId: 'nom', pageSize: 10 })
+
+const columnDisplayItems = buildColumnDisplayItems(['select', 'details', 'nom', 'prenom', 'date_naissance', 'sexe', 'status', 'actions'])
 
 const breakpoints = useBreakpoints(breakpointsTailwind)
 const isMobile = breakpoints.smaller('lg')
@@ -59,8 +58,8 @@ watch(isMobile, (mobile) => {
 const UAvatar = resolveComponent('UAvatar')
 
 // Fetch patients data from supabase
-const { data: patients, error, refresh: refreshPatients } = await useAsyncData('patients', async () => {
-    const { data, error } = await supabase.from('patients').select();
+const { data: patients, error, refresh: refreshPatients } = await useAsyncData('patients-list', async () => {
+    const { data, error } = await supabase.from('patients').select().order('created_at', { ascending: false }).limit(200);
     if (error) {
         throw error;
     }

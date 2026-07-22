@@ -85,6 +85,7 @@ useHead({
 
 // 2. Services et composables
 const supabase = useSupabaseClient()
+const stockStore = useStockStore()
 const toast = useToast()
 const { copy } = useClipboard()
 
@@ -268,24 +269,20 @@ function getRowItems(row: Row<STKHeader>): DropdownMenuItem[][] {
 async function confirmDelete() {
     if (!receptionToDelete.value) return
 
-    const { error } = await supabase
-        .from('stk_trx_headers')
-        .delete()
-        .eq('id', receptionToDelete.value.id)
-
-    if (error) {
-        toast.add({
-            title: 'Erreur',
-            description: error.message,
-            color: 'error'
-        })
-    } else {
+    try {
+        await stockStore.removeHeader(receptionToDelete.value.id)
         toast.add({
             title: 'Succès',
             description: 'Réception supprimée avec succès',
             color: 'success'
         })
         await refreshSTKHeaders()
+    } catch (err: any) {
+        toast.add({
+            title: 'Erreur',
+            description: err.message,
+            color: 'error'
+        })
     }
     openConfirmDelete.value = false
     receptionToDelete.value = null

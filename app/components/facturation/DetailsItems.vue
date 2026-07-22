@@ -42,176 +42,177 @@
 </template>
 
 <script setup lang="ts">
-import { h } from 'vue'
-import type { Row } from '@tanstack/table-core'
-import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
-import type { Article, Facture, STKHeader, STKLine } from '~/types'
+    import { h } from 'vue'
+    import type { Row } from '@tanstack/table-core'
+    import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
+    import type { Article, Facture, STKHeader, STKLine } from '~/types'
 
-const props = defineProps({
-    open: { type: Boolean, required: true },
-    invoiceHeader: { type: Object as PropType<Facture | null>, required: true }
-})
-const emit = defineEmits(['update:open', 'reception-finished'])
+    const props = defineProps({
+        open: { type: Boolean, required: true },
+        invoiceHeader: { type: Object as PropType<Facture | null>, required: true }
+    })
+    const emit = defineEmits(['update:open', 'reception-finished'])
 
-// 2. Services et composables
-const supabase = useSupabaseClient()
-const toast = useToast()
+    // 2. Services et composables
+    const supabase = useSupabaseClient()
+    const toast = useToast()
+    const facturesStore = useFacturesStore()
 
-const isOpen = computed({
-    get: () => props.open,
-    set: (value) => emit('update:open', value)
-})
+    const isOpen = computed({
+        get: () => props.open,
+        set: (value) => emit('update:open', value)
+    })
 
-import { UButton, UDropdownMenu } from '#components'
+    import { UButton, UDropdownMenu } from '#components'
 
-// 4. Refs d'état UI
-const openAddModal = ref(false)
-const openLineDetails = ref(false)
-const selectedLine = ref<STKLine | null>(null)
-const openConfirmFinish = ref(false)
-const finishing = ref(false)
-const currentLineID = ref<string | null>(null)
+    // 4. Refs d'état UI
+    const openAddModal = ref(false)
+    const openLineDetails = ref(false)
+    const selectedLine = ref<STKLine | null>(null)
+    const openConfirmFinish = ref(false)
+    const finishing = ref(false)
+    const currentLineID = ref<string | null>(null)
 
-// 5. useDataTable
-const {
-    table,
-    columnFilters,
-    columnVisibility,
-    rowSelection,
-    pagination,
-    paginationOptions,
-    selectedRowCount,
-    totalFilteredRows,
-    currentPage,
-    currentPageSize,
-    setPage,
-} = useDataTable({ pageSize: 5 })
+    // 5. useDataTable
+    const {
+        table,
+        columnFilters,
+        columnVisibility,
+        rowSelection,
+        pagination,
+        paginationOptions,
+        selectedRowCount,
+        totalFilteredRows,
+        currentPage,
+        currentPageSize,
+        setPage,
+    } = useDataTable({ pageSize: 5 })
 
-// 6. Définition des colonnes
-const columns = computed<TableColumn<STKLine>[]>(() => [
-    {
-        accessorKey: 'article_nom',
-        header: () => h('div', { class: 'w-[250px]' }, 'Article'),
-        cell: ({ row }) => h('div', { class: 'flex flex-col min-w-0' }, [
-            h('p', { class: 'font-medium text-(--ui-text-highlighted) truncate' }, row.original.article?.nom || 'N/A'),
-            h('p', { class: 'text-xs text-(--ui-text-muted) truncate' }, row.original.article?.code || '')
-        ])
-    },
-    {
-        accessorKey: 'prix_unitaire',
-        header: () => h('div', { class: 'w-[120px]' }, 'Prix Unitaire'),
-        cell: ({ row }) => h('p', { class: 'text-left truncate' }, `${row.original.prix_unitaire?.toLocaleString() || 0}`)
-    },
-    {
-        accessorKey: 'quantite_trx',
-        header: () => h('div', { class: 'w-[70px] text-center' }, 'Quantité'),
-        cell: ({ row }) => h('p', { class: 'text-center' }, row.original.quantite_trx)
-    },
-    {
-        accessorKey: 'numero_lot',
-        header: () => h('div', { class: 'w-[120px]' }, 'N° Lot'),
-        cell: ({ row }) => h('p', { class: 'text-left truncate' }, row.original.numero_lot || '-')
-    },
-
-    {
-        id: 'total',
-        header: () => h('div', { class: 'w-[140px]' }, 'Total'),
-        cell: ({ row }) => {
-            const total = (row.original.quantite_trx || 0) * (row.original.prix_unitaire || 0)
-            return h('p', { class: 'text-left font-bold truncate' }, `${total.toLocaleString()}`)
-        }
-    },
-    {
-        id: 'details',
-        header: () => h('div', { class: 'text-center w-[80px]' }, 'Détails'),
-        cell: ({ row }) => h('div', { class: 'text-center' },
-            h(UButton, {
-                icon: 'i-lucide-eye',
-                color: 'neutral',
-                variant: 'ghost',
-                onClick: () => {
-                    selectedLine.value = row.original
-                    openLineDetails.value = true
-                }
-            })
-        )
-    },
-    ...((props.invoiceHeader?.statut === 'Terminé')
-        ? []
-        : [{
-            id: 'actions',
-            header: () => h('div', { class: 'text-center w-[80px]' }, 'Actions'),
-            cell: ({ row }: { row: Row<STKLine> }) => h('div', { class: 'text-center' },
-                h(UDropdownMenu, { content: { align: 'end' }, items: getRowItems(row) }, {
-                    default: () => h(UButton, { icon: 'i-lucide-ellipsis-vertical', color: 'neutral', variant: 'ghost' })
-                })
-            )
-        }])
-])
-
-function getRowItems(row: Row<STKLine>): DropdownMenuItem[][] {
-    return [[
+    // 6. Définition des colonnes
+    const columns = computed<TableColumn<STKLine>[]>(() => [
         {
-            type: 'label' as const,
-            label: 'Ligne Actions'
+            accessorKey: 'article_nom',
+            header: () => h('div', { class: 'w-[250px]' }, 'Article'),
+            cell: ({ row }) => h('div', { class: 'flex flex-col min-w-0' }, [
+                h('p', { class: 'font-medium text-(--ui-text-highlighted) truncate' }, row.original.article?.nom || 'N/A'),
+                h('p', { class: 'text-xs text-(--ui-text-muted) truncate' }, row.original.article?.code || '')
+            ])
         },
         {
-            label: 'Supprimer',
-            icon: 'i-lucide-trash',
-            color: 'error' as const,
-            async onSelect() {
-                const { error } = await supabase.from('invoices_lines').delete().eq('id', (row.original as any).id)
-                if (error) {
-                    toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-                } else {
-                    toast.add({ title: 'Supprimé', description: 'Ligne supprimée', color: 'success' })
-                    await refresh()
+            accessorKey: 'prix_unitaire',
+            header: () => h('div', { class: 'w-[120px]' }, 'Prix Unitaire'),
+            cell: ({ row }) => h('p', { class: 'text-left truncate' }, `${row.original.prix_unitaire?.toLocaleString() || 0}`)
+        },
+        {
+            accessorKey: 'quantite_trx',
+            header: () => h('div', { class: 'w-[70px] text-center' }, 'Quantité'),
+            cell: ({ row }) => h('p', { class: 'text-center' }, row.original.quantite_trx)
+        },
+        {
+            accessorKey: 'numero_lot',
+            header: () => h('div', { class: 'w-[120px]' }, 'N° Lot'),
+            cell: ({ row }) => h('p', { class: 'text-left truncate' }, row.original.numero_lot || '-')
+        },
+
+        {
+            id: 'total',
+            header: () => h('div', { class: 'w-[140px]' }, 'Total'),
+            cell: ({ row }) => {
+                const total = (row.original.quantite_trx || 0) * (row.original.prix_unitaire || 0)
+                return h('p', { class: 'text-left font-bold truncate' }, `${total.toLocaleString()}`)
+            }
+        },
+        {
+            id: 'details',
+            header: () => h('div', { class: 'text-center w-[80px]' }, 'Détails'),
+            cell: ({ row }) => h('div', { class: 'text-center' },
+                h(UButton, {
+                    icon: 'i-lucide-eye',
+                    color: 'neutral',
+                    variant: 'ghost',
+                    onClick: () => {
+                        selectedLine.value = row.original
+                        openLineDetails.value = true
+                    }
+                })
+            )
+        },
+        ...((props.invoiceHeader?.statut === 'Terminé')
+            ? []
+            : [{
+                id: 'actions',
+                header: () => h('div', { class: 'text-center w-[80px]' }, 'Actions'),
+                cell: ({ row }: { row: Row<STKLine> }) => h('div', { class: 'text-center' },
+                    h(UDropdownMenu, { content: { align: 'end' }, items: getRowItems(row) }, {
+                        default: () => h(UButton, { icon: 'i-lucide-ellipsis-vertical', color: 'neutral', variant: 'ghost' })
+                    })
+                )
+            }])
+    ])
+
+    function getRowItems(row: Row<STKLine>): DropdownMenuItem[][] {
+        return [[
+            {
+                type: 'label' as const,
+                label: 'Ligne Actions'
+            },
+            {
+                label: 'Supprimer',
+                icon: 'i-lucide-trash',
+                color: 'error' as const,
+                async onSelect() {
+                    try {
+                        await facturesStore.removeLine((row.original as any).id)
+                        toast.add({ title: 'Supprimé', description: 'Ligne supprimée', color: 'success' })
+                        await refresh()
+                    } catch (e) {
+                        console.log(e)
+                    }
                 }
             }
-        }
-    ]]
-}
+        ]]
+    }
 
-async function finishReception() {
-    if (!props.invoiceHeader?.id) return
+    async function finishReception() {
+        if (!props.invoiceHeader?.id) return
 
-    finishing.value = true
-    // const { data: dataRPC, error: errorRPC } = await supabase.rpc('stock_update', { p_stk_header_id: props.stk_trx_header.id })
-    // console.log('Données retournés par la fonction stock_update ', { dataRPC })
+        finishing.value = true
+        // const { data: dataRPC, error: errorRPC } = await supabase.rpc('stock_update', { p_stk_header_id: props.stk_trx_header.id })
+        // console.log('Données retournés par la fonction stock_update ', { dataRPC })
 
-    // if (errorRPC || dataRPC?.includes('ERREUR')) {
-    //     toast.add({ title: 'Erreur', description: errorRPC?.message || '' + dataRPC, color: 'error' })
-    // } else {
-    //     const { data: dataInsert, error: errorInsert } = await supabase
-    //         .from('stk_trx_headers')
-    //         .update({ statut: 'Terminé' } as never)
-    //         .eq('id', props.stk_trx_header.id)
-    //     if (errorInsert) {
-    //         toast.add({ title: 'Erreur', description: errorInsert?.message, color: 'error' })
-    //     } else {
-    //         toast.add({ title: 'Succès', description: 'Réception terminée', color: 'success' })
-    //         emit('reception-finished')
-    //         openConfirmFinish.value = false
-    //         isOpen.value = false
-    //     }
-    // }
+        // if (errorRPC || dataRPC?.includes('ERREUR')) {
+        //     toast.add({ title: 'Erreur', description: errorRPC?.message || '' + dataRPC, color: 'error' })
+        // } else {
+        //     const { data: dataInsert, error: errorInsert } = await supabase
+        //         .from('stk_trx_headers')
+        //         .update({ statut: 'Terminé' } as never)
+        //         .eq('id', props.stk_trx_header.id)
+        //     if (errorInsert) {
+        //         toast.add({ title: 'Erreur', description: errorInsert?.message, color: 'error' })
+        //     } else {
+        //         toast.add({ title: 'Succès', description: 'Réception terminée', color: 'success' })
+        //         emit('reception-finished')
+        //         openConfirmFinish.value = false
+        //         isOpen.value = false
+        //     }
+        // }
 
-    finishing.value = false
-}
+        finishing.value = false
+    }
 
-// 8. Chargement des données — SEMPRE EN DERNIER
-const { data: lines, pending, refresh } = useLazyAsyncData(
-    `invoices_lines_${props.invoiceHeader?.id}`,
-    async () => {
-        if (!props.invoiceHeader?.id) return []
-        const { data, error } = await supabase
-            .from('invoices_lines')
-            .select('*, article:article_id(*)')
-            .eq('header_id', props.invoiceHeader.id)
-        if (error) throw error
-        console.log(data)
-        return data as STKLine[]
-    },
-    { watch: [() => props.invoiceHeader?.id], immediate: true }
-)
+    // 8. Chargement des données — SEMPRE EN DERNIER
+    const { data: lines, pending, refresh } = useLazyAsyncData(
+        `invoices_lines_${props.invoiceHeader?.id}`,
+        async () => {
+            if (!props.invoiceHeader?.id) return []
+            const { data, error } = await supabase
+                .from('invoices_lines')
+                .select('*, article:article_id(*)')
+                .eq('header_id', props.invoiceHeader.id)
+            if (error) throw error
+            console.log(data)
+            return data as STKLine[]
+        },
+        { watch: [() => props.invoiceHeader?.id], immediate: true }
+    )
 </script>

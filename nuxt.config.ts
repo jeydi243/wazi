@@ -12,8 +12,8 @@ export default defineNuxtConfig({
       "data-vaul-drawer-wrapper": "",
       "class": "bg-(--ui-bg)",
     },
-    // pageTransition: { name: 'page', mode: 'out-in' },
-    // layoutTransition: { name: 'layout', mode: 'out-in' }
+    pageTransition: { name: 'page', mode: 'out-in' },
+    layoutTransition: { name: 'layout', mode: 'out-in' }
   },
   runtimeConfig: {
     // Private keys are only available on the server
@@ -34,7 +34,15 @@ export default defineNuxtConfig({
   routeRules: {
     '/api/**': {
       cors: true
-    }
+    },
+    '/api/lookups': { swr: 3600 },
+    '/api/classes': { swr: 3600 },
+    '/api/users': { swr: 60 },
+    '/**': {
+      headers: {
+        'Cache-Control': 'public, max-age=0, must-revalidate',
+      },
+    },
   },
   supabase: {
     clientOptions: {
@@ -47,9 +55,9 @@ export default defineNuxtConfig({
     redirectOptions: {
       login: "/auth",
       callback: "/confirm",
-      include: undefined,
+      include: [],
       exclude: [],
-      saveRedirectToCookie: false,
+      saveRedirectToCookie: true,
     },
   },
   devServer: {

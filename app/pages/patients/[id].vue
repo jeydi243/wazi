@@ -230,9 +230,9 @@ const { data: patient, refresh: refreshPatient } = await useAsyncData<Patient>('
 const openEditModal = ref(false)
 const openAvatarModal = ref(false)
 
-useHead({
+useSeoMeta({
     title: computed(() => patient.value ? `${patient.value.prenom} ${patient.value.nom} — Patient` : 'Patient'),
-    meta: [{ name: 'description', content: 'Dossier complet du patient.' }]
+    description: 'Dossier complet du patient.',
 })
 
 // ── Onglets ─────────────────────────────────────────────────────────────────

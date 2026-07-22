@@ -14,6 +14,7 @@ const isOpen = computed({
 
 const toast = useToast()
 const supabase = useSupabaseClient()
+const patientsStore = usePatientsStore()
 const loading = ref(false)
 const fileInput = ref<HTMLInputElement | null>(null)
 const selectedFile = ref<File | null>(null)
@@ -53,17 +54,11 @@ async function uploadAvatar() {
             .getPublicUrl(filePath)
 
         // Sauvegarder dans la table "patients"
-        const { error: updateError } = await (supabase as any)
-            .from('patients')
-            .update({ avatar: publicUrl })
-            .eq('id', props.patient.id)
-
-        if (updateError) throw updateError
+        await patientsStore.updateAvatar(props.patient.id, publicUrl)
 
         toast.add({ title: 'Succès', description: 'Photo de profil mise à jour.', color: 'success' })
         emit('avatar-updated')
         isOpen.value = false
-        // Purge preview
         selectedFile.value = null
         previewUrl.value = null
     } catch (error: any) {

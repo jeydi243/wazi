@@ -59,6 +59,7 @@ useHead({
 
 const supabase = useSupabaseClient()
 const { getLookupsById } = useParametresStore()
+const clientsStore = useClientsStore()
 const toast = useToast()
 
 // ✅ Utilisation du composable centralisé
@@ -230,20 +231,12 @@ function getRowItems(row: Row<Client>) {
             icon: 'i-lucide-trash',
             color: 'error',
             async onSelect() {
-                const { error } = await supabase.from('Fournisseurs').delete().eq('id', row.original.id)
-                if (error) {
-                    toast.add({
-                        title: 'Erreur',
-                        description: `Impossible de supprimer l'article : ${error.message}`,
-                        color: 'error'
-                    })
-                } else {
-                    toast.add({
-                        title: 'Article supprimé',
-                        description: `L'article "${row.original.nom}" a été supprimé.`,
-                        color: 'success'
-                    })
+                try {
+                    await clientsStore.remove(row.original.id)
+                    toast.add({ title: 'Client supprimé', description: `Le client "${row.original.nom}" a été supprimé.`, color: 'success' })
                     await refreshClients()
+                } catch (err: any) {
+                    toast.add({ title: 'Erreur', description: `Impossible de supprimer : ${err.message}`, color: 'error' })
                 }
             }
         }

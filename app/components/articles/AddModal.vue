@@ -15,6 +15,7 @@ const ArticleSchema = z.object({
 const supabase = useSupabaseClient()
 const open = ref(false)
 const toast = useToast()
+const articlesStore = useArticlesStore()
 type Schema = z.output<typeof ArticleSchema>
 const parametresStore = useParametresStore()
 const state = reactive<Partial<Schema>>({
@@ -48,17 +49,13 @@ const itemsTypeArticle = computed<SelectMenuItem[]>(() => getTypeArticle.value?.
 const emit = defineEmits(['article-added'])
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('articles')
-        .insert(event?.data as any)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new article ${error.message}`, color: 'error' })
-    } else {
-        toast.add({ title: 'Success', description: `New article ${event.data.nom} added`, color: 'success' })
+    try {
+        await articlesStore.create(event?.data as any)
+        toast.add({ title: 'Success', description: `Nouvel article ${event.data.nom} ajouté`, color: 'success' })
         open.value = false
         emit('article-added')
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: `Impossible d'ajouter l'article : ${err.message}`, color: 'error' })
     }
 }
 </script>

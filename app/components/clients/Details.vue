@@ -7,6 +7,7 @@ const open = defineModel<boolean>('open', { default: false })
 
 const supabase = useSupabaseClient()
 const toast = useToast()
+const clientsStore = useClientsStore()
 
 const selectedOrgId = ref<string | undefined>(undefined)
 const isAddingRecord = ref(false)
@@ -87,36 +88,27 @@ async function addAffectation() {
     if (!selectedOrgId.value || !props.client?.id) return
 
     isAddingRecord.value = true
-    const { error } = await supabase
-        .from('client_organisations')
-        .insert({
-            client_id: props.client.id,
-            organisation_id: selectedOrgId.value
-        } as never)
-
-    isAddingRecord.value = false
-    if (error) {
-        toast.add({ title: 'Erreur', description: `Impossible d'ajouter l'affectation : ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await clientsStore.attachOrg(props.client.id, selectedOrgId.value)
         toast.add({ title: 'Succès', description: 'Organisation affectée avec succès', color: 'success' })
         selectedOrgId.value = undefined
         refreshAffectations()
         refreshOrganisations()
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
+    } finally {
+        isAddingRecord.value = false
     }
 }
 
 async function deleteAffectation(id: number) {
-    const { error } = await supabase
-        .from('article_organisations')
-        .delete()
-        .eq('id', id)
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: `Impossible de supprimer l'affectation : ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await clientsStore.detachOrg(String(id))
         toast.add({ title: 'Succès', description: 'Affectation supprimée', color: 'success' })
         refreshAffectations()
         refreshOrganisations()
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

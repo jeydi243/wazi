@@ -31,6 +31,7 @@ import type { FormSubmitEvent, SelectMenuItem } from '@nuxt/ui'
 import type { Tarifaire, Article, Organisation } from '~/types'
 
 const supabase = useSupabaseClient()
+const tarifairesStore = useTarifairesStore()
 const schema = z.object({
     tarifaire_id: z.string(),
     article_id: z.string(),
@@ -83,17 +84,13 @@ const state = reactive<Partial<Schema>>({
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     console.log(event?.data)
     console.log(props.tarifaire_id)
-    const { data, error } = await supabase
-        .from('tarifaires_lines')
-        .insert(event?.data as any)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new article ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await tarifairesStore.addLine(event?.data as any)
         toast.add({ title: 'Success', description: `New article added`, color: 'success' })
         open.value = false
         emit('article-added')
+    } catch (err: any) {
+        toast.add({ title: 'Error', description: `Can't add new article ${err.message}`, color: 'error' })
     }
 }
 

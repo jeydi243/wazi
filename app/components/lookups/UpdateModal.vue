@@ -30,6 +30,7 @@ const isOpen = computed({
 
 type Schema = z.output<typeof schema>
 const supabase = useSupabaseClient()
+const lookupsStore = useLookupsStore()
 const state = reactive<Partial<Schema>>({ ...props.lookup })
 
 watch(() => props.lookup, (newLookup) => {
@@ -42,19 +43,13 @@ const paramStore = useParametresStore()
 const classes = computed(() => paramStore.getClasseItems)
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    console.log('date to update: %o with ID ', event.data, props.lookup?.id)
-    const { data, error } = await supabase
-        .from('lookups')
-        .update(event?.data)
-        .eq('id', props.lookup?.id || '')
-        .select()
-    console.log('data updated: %o', data)
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't update lookup ${error.message}`, color: 'error' })
-    } else {
-        toast.add({ title: 'Success', description: `Lookup ${event.data.nom} updated`, color: 'success' })
+    try {
+        await lookupsStore.updateLookup(props.lookup?.id || '', event?.data as any)
+        toast.add({ title: 'Succès', description: `Lookup ${event.data.nom} mis à jour`, color: 'success' })
         emit('lookup_updated')
         isOpen.value = false
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 

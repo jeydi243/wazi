@@ -60,7 +60,7 @@ import type { Facture } from '~/types'
 
 const toast = useToast()
 const supabase = useSupabaseClient()
-const user = useSupabaseUser()
+const facturesStore = useFacturesStore()
 const parametresStore = useParametresStore()
 const loading = ref(false)
 
@@ -202,22 +202,11 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
             ...event.data,
             date_facture: event.data.date_facture || new Date()
         }
-        const { data, error } = await supabase
-            .from('invoices')
-            .insert([payload] as never[])
-            .select()
-
-        if (error) {
-            toast.add({ title: 'Error', description: `Impossible d'ajouter la facture ${error.message}`, color: 'error' })
-        } else {
-            toast.add({ title: 'Facture Crée', description: `Nouvelle facture créée ${event.data.numero_facture}`, color: 'success' })
-            emit('facture-added')
-            // open.value = false
-            console.log("Data: ", data);
-            if (data && data[0]) {
-                state.id = data[0]?.id as string
-            }
-        }
+        await facturesStore.create(payload as any)
+        toast.add({ title: 'Facture créée', description: `Nouvelle facture créée ${event.data.numero_facture}`, color: 'success' })
+        emit('facture-added')
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     } finally {
         loading.value = false
     }

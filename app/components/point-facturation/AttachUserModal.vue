@@ -19,6 +19,7 @@ const schema = z.object({
 const open = ref(false)
 const toast = useToast()
 const supabase = useSupabaseClient()
+const rolesStore = useRolesStore()
 
 type Schema = z.output<typeof schema>
 
@@ -93,19 +94,12 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         return
     }
 
-    const { data, error } = await (supabase.from('affectations') as any)
-        .insert({
+    try {
+        await rolesStore.createAffectation({
             user_id: event.data.user_id,
             organisation_id: props.parent.id,
-            lookup_id: lookupId,
-            date_debut: event.data.date_debut?.toISOString(),
-            date_fin: event.data.date_fin?.toISOString() || null
+            lookup_id: lookupId
         })
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-    } else {
         toast.add({ title: 'Succès', description: `Utilisateur attaché avec succès`, color: 'success' })
         emit('user-added')
         open.value = false
@@ -113,6 +107,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         state.user_id = undefined
         state.date_debut = undefined
         state.date_fin = undefined
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

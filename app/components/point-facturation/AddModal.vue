@@ -14,6 +14,7 @@ const open = ref(false)
 const toast = useToast()
 type Schema = z.output<typeof schema>
 const supabase = useSupabaseClient()
+const organisationsStore = useOrganisationsStore()
 const parametresStore = useParametresStore()
 const state = reactive<Partial<Schema>>({
     nom: undefined,
@@ -31,23 +32,19 @@ const itemsOrganisation = computed<SelectMenuItem[]>(() => getTypeOrganisations.
 const emit = defineEmits(['point-facturation-added'])
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('organisations')
-        .insert([{
+    try {
+        await organisationsStore.create({
             nom: event.data.nom,
             description: event.data.description,
             code: event.data.code,
             type_id: event.data.type_id,
             nid: event.data.nid
-        }] as never)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new point-facturation ${error.message}`, color: 'error' })
-    } else {
+        } as any)
         toast.add({ title: 'Success', description: `New point-facturation ${event.data.nom} added`, color: 'success' })
         emit('point-facturation-added')
         open.value = false
+    } catch (err: any) {
+        toast.add({ title: 'Error', description: `Can't add new point-facturation ${err.message}`, color: 'error' })
     }
 }
 </script>

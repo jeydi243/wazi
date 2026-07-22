@@ -66,11 +66,9 @@ import type { TableColumn, DropdownMenuItem } from '@nuxt/ui'
 import type { Organisation } from '~/types'
 import { storeToRefs } from 'pinia'
 
-useHead({
-    title: 'Organisations - Paramètres',
-    meta: [
-        { name: 'description', content: 'Gérer les organisations.' }
-    ]
+useSeoMeta({
+    title: 'Réception Interne - Wazi',
+    description: 'Gérer les réceptions internes de stock.',
 })
 
 const supabase = useSupabaseClient()

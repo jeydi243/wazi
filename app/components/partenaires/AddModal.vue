@@ -13,6 +13,7 @@ const toast = useToast()
 const open = ref(false)
 const emit = defineEmits(['partenaire-added'])
 const supabase = useSupabaseClient()
+const organisationsStore = useOrganisationsStore()
 type Schema = z.output<typeof schema>
 
 const state = reactive<Partial<Schema>>({
@@ -41,17 +42,13 @@ const toCalendarDate = (date: Date) => {
 }
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('organisations')
-        .insert(event?.data as any)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new partenaire ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await organisationsStore.create(event?.data as any)
         toast.add({ title: 'Success', description: `New partenaire ${event.data.nom} added`, color: 'success' })
         open.value = false
         emit('partenaire-added')
+    } catch (err: any) {
+        toast.add({ title: 'Error', description: `Can't add new partenaire ${err.message}`, color: 'error' })
     }
 }
 

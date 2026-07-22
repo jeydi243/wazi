@@ -53,6 +53,7 @@ const emit = defineEmits(['update:open'])
 // 1. Services et composables
 const supabase = useSupabaseClient()
 const toast = useToast()
+const lookupsStore = useLookupsStore()
 const { copy } = useClipboard()
 
 const isOpen = computed({
@@ -195,12 +196,12 @@ function getRowItemsLookups(row: Row<Lookup>) {
             icon: 'i-lucide-trash',
             color: 'error' as const,
             async onSelect() {
-                const { error } = await supabase.from('lookups').delete().eq('id', row.original.id)
-                if (error) {
-                    toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-                } else {
+                try {
+                    await lookupsStore.removeLookup(row.original.id)
                     toast.add({ title: 'Succès', description: 'Lookup supprimé', color: 'success' })
                     await refreshLookups()
+                } catch (err: any) {
+                    toast.add({ title: 'Erreur', description: err.message, color: 'error' })
                 }
             }
         }

@@ -58,21 +58,17 @@ const items = computed<SelectMenuItem[]>(() => lookups.value?.map(lookup => ({
 })) || [])
 
 const emit = defineEmits(['client-added'])
+const clientsStore = useClientsStore()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('clients')
-        .insert(event?.data as any)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new client ${error.message}`, color: 'error' })
-    } else {
-        toast.add({ title: 'Success', description: `New client ${event.data.nom} added`, color: 'success' })
+    try {
+        await clientsStore.create(event?.data as any)
+        toast.add({ title: 'Succès', description: `Nouveau client ${event.data.nom} ajouté`, color: 'success' })
         open.value = false
         emit('client-added')
-        // Réinitialiser le code après soumission réussie
         state.code = generateRandomCode()
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

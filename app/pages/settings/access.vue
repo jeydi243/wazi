@@ -58,6 +58,7 @@ useHead({
 
 const supabase = useSupabaseClient()
 const { getLookupsById } = useParametresStore()
+const articlesStore = useArticlesStore()
 const toast = useToast()
 
 // 3. resolveComponent() — obligatoire avant tout usage dans h()
@@ -220,20 +221,20 @@ function getRowItems(row: Row<Role>) {
             icon: 'i-lucide-trash',
             color: 'error',
             async onSelect() {
-                const { error } = await supabase.from('articles').delete().eq('id', row.original.id)
-                if (error) {
-                    toast.add({
-                        title: 'Erreur',
-                        description: `Impossible de supprimer l'article : ${error.message}`,
-                        color: 'error'
-                    })
-                } else {
+                try {
+                    await articlesStore.remove(row.original.id)
                     toast.add({
                         title: 'Role supprimé',
                         description: `L'article "${row.original.nom}" a été supprimé.`,
                         color: 'success'
                     })
                     await refreshRoles()
+                } catch (err: any) {
+                    toast.add({
+                        title: 'Erreur',
+                        description: `Impossible de supprimer l'article : ${err.message}`,
+                        color: 'error'
+                    })
                 }
             }
         }

@@ -4,10 +4,6 @@ import { upperFirst } from 'scule'
 import { getPaginationRowModel, type Row } from '@tanstack/table-core'
 import type { Organisation, Patient, User } from '~/types'
 
-definePageMeta({
-    pageTransition: false
-})
-
 useHead({
     title: 'Partenaires',
     meta: [

@@ -72,6 +72,7 @@ useHead({
 
 // 2. Services et composables
 const supabase = useSupabaseClient()
+const tarifairesStore = useTarifairesStore()
 const toast = useToast()
 
 const {
@@ -196,12 +197,12 @@ function getRowItems(row: Row<Tarifaire>) {
             icon: 'i-lucide-trash',
             color: 'error',
             async onSelect() {
-                const { error } = await supabase.from('tarifaires').delete().eq('id', row.original.id)
-                if (error) {
-                    toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-                } else {
+                try {
+                    await tarifairesStore.remove(row.original.id)
                     toast.add({ title: 'Succès', description: 'Tarifaire supprimé avec succès', color: 'success' })
                     await refreshTarifaires()
+                } catch (err: any) {
+                    toast.add({ title: 'Erreur', description: err.message, color: 'error' })
                 }
             }
         }

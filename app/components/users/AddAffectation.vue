@@ -10,6 +10,7 @@ const props = defineProps<{
 const emit = defineEmits(['affectation-added'])
 
 const supabase = useSupabaseClient()
+const rolesStore = useRolesStore()
 const toast = useToast()
 const open = ref(false)
 
@@ -55,15 +56,11 @@ const serviceItems = computed<SelectMenuItem[]>(() => services.value?.map((s: Or
 })) || [])
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { error } = await (supabase.from('affectations') as any)
-        .insert({
-            user_id: props.user_id,
+    try {
+        await rolesStore.createAffectation({
+            user_id: props.user_id!,
             ...event.data
         })
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-    } else {
         toast.add({ title: 'Succès', description: 'Affectation ajoutée avec succès', color: 'success' })
         open.value = false
         emit('affectation-added')
@@ -71,6 +68,8 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         // Reset state
         state.lookup_id = undefined
         state.organisation_id = undefined
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

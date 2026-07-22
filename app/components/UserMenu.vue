@@ -7,8 +7,7 @@ defineProps<{
 
 const colorMode = useColorMode()
 const appConfig = useAppConfig()
-const supabase = useSupabaseClient()
-const toast = useToast()
+const auth = useAuth()
 const colors = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']
 const neutrals = ['slate', 'gray', 'zinc', 'neutral', 'stone']
 
@@ -119,16 +118,9 @@ const items = computed<DropdownMenuItem[][]>(() => ([[{
 
 const isLogoutModalOpen = ref(false)
 
-const handleLogout = async () => {
+const handleLogout = () => {
     isLogoutModalOpen.value = false
-    let user = useSupabaseUser()
-    const { error } = await supabase.auth.signOut()
-    if (error) console.log(error)
-
-    else {
-        navigateTo('/login')
-        toast.add({ title: 'Good Bye ' + user.value?.email + '! ', description: 'We are sad you go ! ', color: 'warning' })
-    }
+    auth.logout()
 }
 </script>
 

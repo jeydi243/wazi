@@ -21,7 +21,7 @@ const schema = z.object({
 })
 
 const toast = useToast()
-const supabase = useSupabaseClient()
+const lookupsStore = useLookupsStore()
 
 const isOpen = computed({
     get: () => props.open,
@@ -49,19 +49,13 @@ watch(() => props.classe, (newClasse) => {
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (!props.classe?.id) return
-
-    const { error } = await supabase
-        .from('classes')
-        .update(event.data)
-        .eq('id', props.classe.id)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: `Impossible de mettre à jour : ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await lookupsStore.updateClasse(props.classe.id, event.data)
         toast.add({ title: 'Succès', description: `Classe "${event.data.nom}" mise à jour`, color: 'success' })
         emit('classe_updated')
         isOpen.value = false
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

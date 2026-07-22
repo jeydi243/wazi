@@ -30,24 +30,21 @@ const items = computed<SelectMenuItem[]>(() => typeOrganisation?.map((lookup: Lo
 })) || [])
 
 const emit = defineEmits(['organisation-added'])
+const organisationsStore = useOrganisationsStore()
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('organisations')
-        .insert([{
+    try {
+        await organisationsStore.create({
             nom: event.data.nom,
             description: event.data.description,
             code: event.data.code,
             lookup_id: event.data.lookup_id
-        }] as never)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new organisation ${error.message}`, color: 'error' })
-    } else {
-        toast.add({ title: 'Success', description: `New organisation ${event.data.nom} added`, color: 'success' })
+        } as any)
+        toast.add({ title: 'Succès', description: `Nouvelle organisation ${event.data.nom} ajoutée`, color: 'success' })
         emit('organisation-added')
         open.value = false
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

@@ -56,9 +56,10 @@ useHead({
     ]
 })
 
-const supabase = useSupabaseClient()
-const { getLookupsById } = useParametresStore()
 const toast = useToast()
+const supabase = useSupabaseClient()
+const articlesStore = useArticlesStore()
+const { getLookupsById } = useParametresStore()
 
 // ✅ Utilisation du composable centralisé
 const {
@@ -308,20 +309,20 @@ function getRowItems(row: Row<Article>) {
             icon: 'i-lucide-trash',
             color: 'error',
             async onSelect() {
-                const { error } = await supabase.from('articles').delete().eq('id', row.original.id)
-                if (error) {
-                    toast.add({
-                        title: 'Erreur',
-                        description: `Impossible de supprimer l'article : ${error.message}`,
-                        color: 'error'
-                    })
-                } else {
+                try {
+                    await articlesStore.remove(row.original.id)
                     toast.add({
                         title: 'Article supprimé',
                         description: `L'article "${row.original.nom}" a été supprimé.`,
                         color: 'success'
                     })
                     await refreshArticles()
+                } catch (err: any) {
+                    toast.add({
+                        title: 'Erreur',
+                        description: `Impossible de supprimer l'article : ${err.message}`,
+                        color: 'error'
+                    })
                 }
             }
         }

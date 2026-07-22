@@ -25,6 +25,7 @@ const isOpen = computed({
 const toast = useToast()
 type Schema = z.output<typeof schema>
 const supabase = useSupabaseClient()
+const organisationsStore = useOrganisationsStore()
 const parametresStore = useParametresStore()
 
 const state = reactive<Partial<Schema>>({
@@ -63,25 +64,21 @@ const loading = ref(false)
 async function onSubmit(event: FormSubmitEvent<Schema>) {
     if (!props.organisation?.id) return
     loading.value = true
-    const { data, error } = await supabase
-        .from('organisations')
-        .update({
+    try {
+        await organisationsStore.update(props.organisation.id, {
             nom: event.data.nom,
             description: event.data.description,
             code: event.data.code,
             type_id: event.data.type_id,
             nid: event.data.nid
         })
-        .eq('id', props.organisation.id)
-        .select()
-
-    loading.value = false
-    if (error) {
-        toast.add({ title: 'Erreur', description: `Impossible de modifier : ${error.message}`, color: 'error' })
-    } else {
+        loading.value = false
         toast.add({ title: 'Succès', description: `L'organisation a été modifiée`, color: 'success' })
         emit('point-facturation-updated')
         isOpen.value = false
+    } catch (err: any) {
+        loading.value = false
+        toast.add({ title: 'Erreur', description: `Impossible de modifier : ${err.message}`, color: 'error' })
     }
 }
 </script>

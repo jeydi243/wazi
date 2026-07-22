@@ -1,13 +1,14 @@
 export default defineNuxtRouteMiddleware(async () => {
-  const user = useSupabaseUser()
-  if (!user.value) {
+  const auth = useAuth()
+
+  if (!auth.isAuthenticated.value) {
     return navigateTo('/auth')
   }
 
   const usersStore = useUsersStore()
   await usersStore.init()
-  const hasAdminRole = usersStore.usersRoles?.some((ur: any) => ur.role?.code === 'admin')
-  if (!hasAdminRole) {
+
+  if (!auth.isAdmin.value) {
     return navigateTo('/')
   }
 })

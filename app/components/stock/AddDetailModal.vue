@@ -20,6 +20,7 @@ const schema = z.object({
     numero_serie: z.string().min(1, 'Numéro de série requis'),
     statut: z.string().min(1, 'Statut requis'),
 })
+const stockStore = useStockStore()
 type Schema = z.output<typeof schema>
 
 const state = reactive<Partial<Schema>>({
@@ -28,17 +29,16 @@ const state = reactive<Partial<Schema>>({
 })
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { error } = await supabase.from('stk_trx_details').insert({
-        line_id: props.lineId,
-        ...event.data
-    })
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-    } else {
-        toast.add({ title: 'Succès', description: 'Details ajouté', color: 'success' })
-        emit('added')
-        isOpen.value = false
+    try {
+        await stockStore.createLineDetail({
+            line_id: props.lineId,
+            ...event.data
+        })
+        toast.add({ title: 'Succès', description: 'Détail ajouté', color: 'success' })
+        open.value = false
+        emit('detail-added', { line_id: props.lineId })
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

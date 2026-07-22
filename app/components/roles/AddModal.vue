@@ -10,6 +10,7 @@ const RoleSchema = z.object({
     entite: z.string().optional()
 })
 const supabase = useSupabaseClient()
+const rolesStore = useRolesStore()
 const open = ref(false)
 const toast = useToast()
 type Schema = z.output<typeof RoleSchema>
@@ -33,17 +34,13 @@ const items = computed<SelectMenuItem[]>(() => lookups.value?.map(lookup => ({
 const emit = defineEmits(['role-added'])
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { data, error } = await supabase
-        .from('roles')
-        .insert(event?.data as any)
-        .select()
-
-    if (error) {
-        toast.add({ title: 'Error', description: `Can't add new role ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await rolesStore.create(event?.data as any)
         toast.add({ title: 'Success', description: `New role ${event.data.nom} added`, color: 'success' })
         open.value = false
         emit('role-added')
+    } catch (err: any) {
+        toast.add({ title: 'Error', description: `Can't add new role ${err.message}`, color: 'error' })
     }
 }
 </script>

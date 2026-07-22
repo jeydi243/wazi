@@ -7,7 +7,7 @@ const open = defineModel<boolean>('open', { default: false })
 
 const supabase = useSupabaseClient()
 const toast = useToast()
-
+const articlesStore = useArticlesStore()
 const selectedOrgId = ref<string | undefined>(undefined)
 const isAddingRecord = ref(false)
 const openEditModal = ref(false)
@@ -88,38 +88,28 @@ const columns: TableColumn<any>[] = [
 
 async function addAffectation() {
     if (!selectedOrgId.value || !props.article?.id) return
-
     isAddingRecord.value = true
-    const { error } = await supabase
-        .from('article_organisations')
-        .insert({
-            article_id: props.article.id,
-            organisation_id: selectedOrgId.value
-        })
-
-    isAddingRecord.value = false
-    if (error) {
-        toast.add({ title: 'Erreur', description: `Impossible d'ajouter l'affectation : ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await articlesStore.attachOrg(props.article.id, selectedOrgId.value)
         toast.add({ title: 'Succès', description: 'Organisation affectée avec succès', color: 'success' })
         selectedOrgId.value = undefined
         refreshAffectations()
         refreshOrganisations()
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
+    } finally {
+        isAddingRecord.value = false
     }
 }
 
 async function deleteAffectation(id: number) {
-    const { error } = await supabase
-        .from('article_organisations')
-        .delete()
-        .eq('id', id)
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: `Impossible de supprimer l'affectation : ${error.message}`, color: 'error' })
-    } else {
+    try {
+        await articlesStore.detachOrg(String(id))
         toast.add({ title: 'Succès', description: 'Affectation supprimée', color: 'success' })
         refreshAffectations()
         refreshOrganisations()
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>

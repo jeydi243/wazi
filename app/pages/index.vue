@@ -1,12 +1,12 @@
 <script setup lang="ts">
-useHead({
+useSeoMeta({
     title: 'Accueil - Wazi',
-    meta: [
-        { name: 'description', content: 'Tableau de bord de gestion médicale Wazi.' }
-    ]
+    description: 'Tableau de bord de gestion médicale Wazi.',
 })
 </script>
 
 <template>
+    <NuxtErrorBoundary>
     <WaitingDefault />
+    </NuxtErrorBoundary>
 </template>

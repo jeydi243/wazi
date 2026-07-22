@@ -11,6 +11,7 @@ const props = defineProps<{
 const emit = defineEmits(['role-added'])
 
 const supabase = useSupabaseClient()
+const rolesStore = useRolesStore()
 const toast = useToast()
 const open = ref(false)
 const maxDate = new CalendarDate(new Date().getFullYear(), new Date().getMonth() + 1, new Date().getDate())
@@ -80,20 +81,16 @@ const profilItems = computed<SelectMenuItem[]>(() => profils.value?.map((profil:
 })) || [])
 
 async function onSubmit(event: FormSubmitEvent<Schema>) {
-    const { error } = await (supabase.from('user_roles') as any)
-        .insert({
-            ...event.data
-        } as never)
-
-    if (error) {
-        toast.add({ title: 'Erreur', description: error.message, color: 'error' })
-    } else {
+    try {
+        await rolesStore.assignRole(event.data.user_id, event.data.role_id)
         toast.add({ title: 'Succès', description: 'Affectation ajoutée avec succès', color: 'success' })
         open.value = false
         emit('role-added')
 
         // Reset state
         state.role_id = undefined
+    } catch (err: any) {
+        toast.add({ title: 'Erreur', description: err.message, color: 'error' })
     }
 }
 </script>
